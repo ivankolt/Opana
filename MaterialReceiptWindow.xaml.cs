@@ -662,6 +662,12 @@ namespace UchPR
                 return (int)cmd.ExecuteScalar();
             }
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            DocumentHistoryWindow documentHistoryItem = new DocumentHistoryWindow();
+            documentHistoryItem.Show();
+        }
     }
 
     // ======================= МОДЕЛИ ДАННЫХ =======================

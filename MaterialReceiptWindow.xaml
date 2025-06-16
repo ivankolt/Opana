@@ -64,6 +64,11 @@
                            Foreground="{StaticResource TextBlack}"/>
                 <DatePicker x:Name="dpDate" Grid.Column="3" Margin="10,0" 
                            FontSize="14" Height="30"/>
+
+                <Button Grid.Column="4" Width="150" Content="История документов"     Background="{StaticResource PrimaryColor2}" 
+    Foreground="{StaticResource TextWhite}" Click="Button_Click">
+                    
+                </Button>
             </Grid>
         </Border>
 
