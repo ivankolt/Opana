@@ -1,0 +1,96 @@
+﻿<Window x:Class="UchPR.ThresholdSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Настройка порогов списания" Height="500" Width="700"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource TextWhite}">
+
+    <Window.Resources>
+        <!-- Локальные ресурсы с цветами из Style Guide -->
+        <SolidColorBrush x:Key="PrimaryColor1" Color="#B5D5CA"/>
+        <SolidColorBrush x:Key="PrimaryColor2" Color="#E0A9AF"/>
+        <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
+        <SolidColorBrush x:Key="AdditionalColor1" Color="#D1EEFC"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <!-- Заголовок с логотипом -->
+            <RowDefinition Height="*"/>
+            <!-- Основной контент -->
+            <RowDefinition Height="60"/>
+            <!-- Кнопки -->
+        </Grid.RowDefinitions>
+
+        <!-- ======================= ЗАГОЛОВОК С ЛОГОТИПОМ ======================= -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryColor1}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Логотип (квадратный вариант для форм) -->
+                <Image Grid.Column="0" Source="/Images/Logo/logo-01.jpg" 
+                       Width="60" Height="60" Margin="10" Stretch="Uniform"/>
+
+                <TextBlock Grid.Column="1" Text="Настройка автоматического списания обрезков"
+                           VerticalAlignment="Center" FontSize="16" FontWeight="Bold"
+                           Foreground="{StaticResource TextWhite}" Margin="15,0,0,0"/>
+            </Grid>
+        </Border>
+
+        <!-- ======================= ОСНОВНОЙ КОНТЕНТ ======================= -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Инструкция -->
+            <TextBlock Grid.Row="0" 
+                       Text="Настройте минимальные остатки материалов. При достижении этих значений материал будет автоматически списан как обрезок."
+                       TextWrapping="Wrap" Margin="0,0,0,15"
+                       FontSize="12" Foreground="{StaticResource TextBlack}"/>
+
+            <!-- Таблица с настройками -->
+            <DataGrid x:Name="dgThresholds" Grid.Row="1" 
+                      AutoGenerateColumns="False" CanUserAddRows="False"
+                      AlternatingRowBackground="{StaticResource AdditionalColor1}"
+                      GridLinesVisibility="Horizontal" HeadersVisibility="Column">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Наименование материала" 
+                                        Binding="{Binding MaterialName}" 
+                                        IsReadOnly="True" Width="3*"/>
+                    <DataGridTextColumn Header="Артикул" 
+                                        Binding="{Binding Article}" 
+                                        IsReadOnly="True" Width="1.5*"/>
+                    <DataGridTextColumn Header="Порог списания" 
+                                        Binding="{Binding ScrapThreshold}" 
+                                        Width="1.5*"/>
+                    <DataGridTextColumn Header="Единица измерения" 
+                                        Binding="{Binding UnitName}" 
+                                        IsReadOnly="True" Width="1.5*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <!-- ======================= КНОПКИ УПРАВЛЕНИЯ ======================= -->
+        <Border Grid.Row="2" Background="{StaticResource AdditionalColor1}" Padding="20,10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="btnSave" Content="Сохранить настройки" 
+                        Background="{StaticResource PrimaryColor2}" 
+                        Foreground="{StaticResource TextWhite}"
+                        FontSize="14" Padding="20,8" Margin="0,0,10,0"
+                        Click="btnSave_Click"/>
+                <Button x:Name="btnCancel" Content="Отмена" 
+                        Background="LightGray" 
+                        Foreground="{StaticResource TextBlack}"
+                        FontSize="14" Padding="20,8"
+                        Click="btnCancel_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

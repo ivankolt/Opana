@@ -1,0 +1,88 @@
+﻿<Window x:Class="UchPR.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Система управления производством УчПР" Height="700" Width="1200"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок с информацией о пользователе -->
+        <Border Grid.Row="0" Background="#B5D5CA" Padding="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Image Grid.Column="0" Source="/Images/Logo/logo-01.jpg" 
+                       Width="40" Height="40" Margin="5"/>
+
+                <TextBlock Grid.Column="1" x:Name="UserInfo" 
+                           VerticalAlignment="Center" FontSize="14" FontWeight="Bold"
+                           Foreground="White" Margin="10,0"/>
+
+                <Button Grid.Column="2" x:Name="btnExit" Content="Выход" 
+                        Width="80" Height="30" Click="btnExit_Click"
+                        Background="White" Foreground="Black"/>
+            </Grid>
+        </Border>
+
+        <!-- Панель навигации -->
+        <Border Grid.Row="1" Background="#E0A9AF" Padding="10">
+            <StackPanel x:Name="NavigationPanel" Orientation="Horizontal" HorizontalAlignment="Center">
+
+                <!-- Кнопки для кладовщика -->
+                <Button x:Name="btnWarehouse" Content="Склад" 
+                        Width="120" Height="35" Margin="5" Click="BtnWarehouse_Click"
+                        Background="White" FontWeight="SemiBold"/>
+
+                <Button x:Name="btnFabricList" Content="Список тканей" 
+                        Width="120" Height="35" Margin="5" Click="BtnFabricList_Click"
+                        Background="White" FontWeight="SemiBold"/>
+
+                <Button x:Name="btnAccessoryList" Content="Список фурнитуры" 
+                        Width="140" Height="35" Margin="5" Click="BtnAccessoryList_Click"
+                        Background="White" FontWeight="SemiBold"/>
+
+                <!-- Кнопки для менеджера и руководителя -->
+                <Button x:Name="btnProductList" Content="Каталог изделий" 
+                        Width="140" Height="35" Margin="5" Click="BtnProductList_Click"
+                        Background="White" FontWeight="SemiBold"/>
+
+                <Button x:Name="btnOrders" Content="Заказы" 
+                        Width="120" Height="35" Margin="5" Click="BtnOrders_Click"
+                        Background="White" FontWeight="SemiBold"/>
+
+                <!-- Кнопки для руководителя -->
+                <Button x:Name="btnReports" Content="Отчеты" 
+                        Width="120" Height="35" Margin="5" Click="BtnReports_Click"
+                        Background="White" FontWeight="SemiBold"/>
+
+                <!-- Кнопки для заказчика -->
+                <Button x:Name="btnCatalog" Content="Каталог" 
+                        Width="120" Height="35" Margin="5" Click="BtnCatalog_Click"
+                        Background="White" FontWeight="SemiBold"/>
+
+                <Button x:Name="btnMaterialReceipt"
+        Content="Поступление материалов" Background="White"  FontWeight="SemiBold"
+        Width="180" Height="40" Margin="5"
+        Click="BtnMaterialReceipt_Click"/>
+
+                <Button x:Name="btnMyOrders" Content="Мои заказы" 
+                        Width="120" Height="35" Margin="5" Click="BtnMyOrders_Click"
+                        Background="White" FontWeight="SemiBold"/>
+
+            </StackPanel>
+        </Border>
+
+        <!-- Основное содержимое -->
+        <Frame x:Name="MainFrame" Grid.Row="2" NavigationUIVisibility="Hidden"/>
+
+    </Grid>
+</Window>

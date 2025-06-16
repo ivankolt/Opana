@@ -1,0 +1,123 @@
+﻿<Window x:Class="UchPR.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Авторизация" Height="500" Width="400"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent">
+
+    <Window.Resources>
+        <!-- Цвета из Style Guide -->
+        <SolidColorBrush x:Key="PrimaryColor1" Color="#B5D5CA"/>
+        <SolidColorBrush x:Key="PrimaryColor2" Color="#E0A9AF"/>
+        <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
+
+        <!-- Стиль для акцентной кнопки "Войти" -->
+        <Style TargetType="Button" x:Key="ActionButtonStyle">
+            <Setter Property="Background" Value="{StaticResource PrimaryColor2}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextWhite}"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="5" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#D4989E"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Стиль для текстовых полей и пароля -->
+        <Style TargetType="{x:Type Control}" x:Key="InputControlStyle">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Height" Value="35"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{StaticResource TextWhite}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBlack}"/>
+        </Style>
+
+    </Window.Resources>
+
+    <!-- Основной контейнер с рамкой -->
+    <Border BorderBrush="#CCCCCC" BorderThickness="1" Background="{StaticResource TextWhite}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="80"/>
+                <!-- Заголовок -->
+                <RowDefinition Height="*"/>
+                <!-- Основной контент -->
+            </Grid.RowDefinitions>
+
+            <!-- ======================= ЗАГОЛОВОК ======================= -->
+            <Border Grid.Row="0" Background="{StaticResource PrimaryColor1}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Место для логотипа -->
+                    <Image Grid.Column="0" Source="/Images/Logo/logo-01.jpg" 
+                           Stretch="Uniform"/>
+                    <!-- ЗАМЕНИТЕ Source -->
+
+                    <TextBlock Grid.Column="1" Text="Авторизация"
+                               VerticalAlignment="Center"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource TextWhite}"
+                               Margin="20,0,0,0"/>
+                </Grid>
+            </Border>
+
+            <!-- ======================= ОСНОВНОЙ КОНТЕНТ ======================= -->
+            <StackPanel Grid.Row="1" Margin="30">
+
+                <TextBlock Text="Вход в систему" 
+                           FontSize="18" FontWeight="Bold" 
+                           HorizontalAlignment="Center" 
+                           Foreground="{StaticResource TextBlack}"
+                           Margin="0,10,0,30"/>
+
+                <!-- Логин -->
+                <TextBlock Text="Логин" Foreground="{StaticResource TextBlack}" FontSize="12" Margin="0,0,0,5"/>
+                <TextBox x:Name="txtLogin" Style="{StaticResource InputControlStyle}"/>
+
+                <!-- Пароль -->
+                <TextBlock Text="Пароль" Foreground="{StaticResource TextBlack}" FontSize="12" Margin="0,15,0,5"/>
+                <PasswordBox x:Name="txtPassword" Style="{StaticResource InputControlStyle}"/>
+
+                <!-- Сообщение об ошибке -->
+                <TextBlock x:Name="lblError" Foreground="Red" 
+                           TextAlignment="Center" Margin="0,10" Visibility="Collapsed"/>
+
+                <!-- Кнопка "Войти" -->
+                <Button x:Name="btnLogin" Content="Войти" Margin="0,20,0,10"
+                        Style="{StaticResource ActionButtonStyle}" Click="btnLogin_Click"/>
+
+                <!-- Ссылки внизу -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                    <TextBlock>
+                        <Hyperlink Foreground="#4682B4" Click="Register_Click">Регистрация</Hyperlink>
+                    </TextBlock>
+                    <TextBlock Text=" | " Margin="5,0" Foreground="{StaticResource TextBlack}"/>
+                    <TextBlock>
+                        <Hyperlink Foreground="#4682B4" Click="Exit_Click">Выход из приложения</Hyperlink>
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

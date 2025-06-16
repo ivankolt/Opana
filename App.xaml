@@ -1,0 +1,45 @@
+﻿<Application x:Class="UchPR.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:UchPR"
+             StartupUri="LoginWindow.xaml">
+    <!-- Ресурсы для всех окон - добавьте в App.xaml или в каждое окно -->
+    <Application.Resources>
+        <!-- Основные цвета -->
+        <SolidColorBrush x:Key="PrimaryColor1" Color="#B5D5CA"/>
+        <!-- RGB: 181, 213, 202 -->
+        <SolidColorBrush x:Key="PrimaryColor2" Color="#E0A9AF"/>
+        <!-- RGB: 224, 169, 175 -->
+
+        <!-- Дополнительные цвета -->
+        <SolidColorBrush x:Key="AdditionalColor1" Color="#D1EEFC"/>
+        <!-- RGB: 209, 238, 252 -->
+        <SolidColorBrush x:Key="AdditionalColor2" Color="#FFFCD6"/>
+        <!-- RGB: 255, 252, 214 -->
+
+        <!-- Цвета для текста -->
+        <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
+        <!-- RGB: 255, 255, 255 -->
+        <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
+        <!-- RGB: 0, 0, 0 -->
+
+        <!-- Стили для кнопок -->
+        <Style TargetType="Button" x:Key="PrimaryButtonStyle">
+            <Setter Property="Background" Value="{StaticResource PrimaryColor2}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextWhite}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="Height" Value="35"/>
+            <Setter Property="Padding" Value="15,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <!-- Стили для заголовков -->
+        <Style TargetType="TextBlock" x:Key="HeaderStyle">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextWhite}"/>
+        </Style>
+    </Application.Resources>
+
+</Application>

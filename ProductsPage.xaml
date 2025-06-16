@@ -1,0 +1,112 @@
+﻿<Page x:Class="UchPR.ProductsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      mc:Ignorable="d" 
+      d:DesignHeight="600" d:DesignWidth="900"
+      Title="Список изделий" Loaded="Page_Loaded">
+
+    <!-- Используем ресурсы из App.xaml или определенные здесь для единообразия -->
+    <Page.Resources>
+        <SolidColorBrush x:Key="PrimaryColor1" Color="#B5D5CA"/>
+        <SolidColorBrush x:Key="PrimaryColor2" Color="#E0A9AF"/>
+        <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <!-- Заголовок -->
+            <RowDefinition Height="*"/>
+            <!-- Основной контент -->
+        </Grid.RowDefinitions>
+
+        <!-- ======================= ЗАГОЛОВОК ======================= -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryColor1}">
+            <TextBlock Text="Учет готовых изделий"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                       FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextWhite}"/>
+        </Border>
+
+        <!-- ======================= ОСНОВНОЙ КОНТЕНТ ======================= -->
+        <Grid Grid.Row="1" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.5*" MinWidth="350"/>
+                <!-- Список изделий -->
+                <ColumnDefinition Width="5"/>
+                <!-- Разделитель -->
+                <ColumnDefinition Width="2*"/>
+                <!-- Детальная информация -->
+            </Grid.ColumnDefinitions>
+
+            <!-- ЛЕВАЯ КОЛОНКА: СПИСОК ИЗДЕЛИЙ (MASTER) -->
+            <DockPanel Grid.Column="0">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBox x:Name="txtSearch" Width="200" ToolTip="Поиск по наименованию или артикулу"/>
+                    <Button x:Name="btnSearch" Content="Найти" Margin="5,0"/>
+                </StackPanel>
+
+                <Button x:Name="btnAddNewProduct" DockPanel.Dock="Bottom" Content="Добавить новое изделие" Margin="0,10,0,0" Background="{StaticResource PrimaryColor2}" Foreground="White" BorderThickness="0"/>
+
+                <DataGrid x:Name="dgProducts" AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectionChanged="dgProducts_SelectionChanged">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Артикул" Binding="{Binding Article}" Width="*"/>
+                        <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="2*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="LightGray"/>
+
+            <!-- ПРАВАЯ КОЛОНКА: ДЕТАЛИ И СПЕЦИФИКАЦИЯ (DETAIL) -->
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="DetailsPanel" Visibility="Collapsed" Margin="10,0,0,0">
+                    <Border BorderBrush="LightGray" BorderThickness="1" Padding="10">
+                        <Image x:Name="imgProduct" Height="200" Stretch="Uniform"/>
+                    </Border>
+
+                    <TextBlock x:Name="tbProductName" FontWeight="Bold" FontSize="18" Margin="0,10,0,5" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="tbProductArticle" FontStyle="Italic" Foreground="Gray"/>
+
+                    <TextBlock Text="Размеры:" FontWeight="SemiBold" Margin="0,15,0,2"/>
+                    <TextBlock x:Name="tbProductDimensions"/>
+
+                    <TextBlock Text="Комментарий:" FontWeight="SemiBold" Margin="0,15,0,5"/>
+                    <TextBlock x:Name="tbProductComment" TextWrapping="Wrap"/>
+
+                    <Separator Margin="0,20"/>
+
+                    <TextBlock Text="Состав изделия (Спецификация):" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                    <ListView x:Name="lvComposition" BorderThickness="0">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" MinWidth="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding MaterialType}" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Grid.Column="2" HorizontalAlignment="Right">
+                                        <Run Text="{Binding Quantity, StringFormat={}{0:F2}}"/>
+                                        <Run Text=" "/>
+                                        <Run Text="{Binding UnitName}"/>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                        <Button x:Name="btnPrintSpec" Content="Печать спецификации"/>
+                        <Button x:Name="btnEditProduct" Content="Редактировать" Margin="10,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>

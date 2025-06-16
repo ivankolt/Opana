@@ -1,0 +1,105 @@
+﻿<Window x:Class="UchPR.ScrapLogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Журнал списания обрезков" Height="600" Width="900"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource TextWhite}">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="PrimaryColor1" Color="#B5D5CA"/>
+        <SolidColorBrush x:Key="PrimaryColor2" Color="#E0A9AF"/>
+        <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
+        <SolidColorBrush x:Key="AdditionalColor1" Color="#D1EEFC"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <!-- Заголовок -->
+            <RowDefinition Height="Auto"/>
+            <!-- Фильтры -->
+            <RowDefinition Height="*"/>
+            <!-- Таблица журнала -->
+            <RowDefinition Height="60"/>
+            <!-- Итоги -->
+        </Grid.RowDefinitions>
+
+        <!-- ======================= ЗАГОЛОВОК С ЛОГОТИПОМ ======================= -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryColor1}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Image Grid.Column="0" Source="/Images/Logo/logo-01.jpg" 
+                       Width="60" Height="60" Margin="10" Stretch="Uniform"/>
+
+                <TextBlock Grid.Column="1" Text="Журнал автоматического списания обрезков материалов" 
+                           VerticalAlignment="Center" FontSize="16" FontWeight="Bold"
+                           Foreground="{StaticResource TextWhite}" Margin="15,0,0,0"/>
+            </Grid>
+        </Border>
+
+        <!-- ======================= ФИЛЬТРЫ ======================= -->
+        <Border Grid.Row="1" Background="{StaticResource AdditionalColor1}" Padding="20,10">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Период с:" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"
+                           Foreground="{StaticResource TextBlack}"/>
+                <DatePicker x:Name="dpFrom" Margin="10,0,20,0" FontSize="12" Width="120"/>
+
+                <TextBlock Text="по:" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"
+                           Foreground="{StaticResource TextBlack}"/>
+                <DatePicker x:Name="dpTo" Margin="10,0,20,0" FontSize="12" Width="120"/>
+
+                <Button x:Name="btnFilter" Content="Применить фильтр" 
+                        Background="{StaticResource PrimaryColor2}" 
+                        Foreground="{StaticResource TextWhite}"
+                        FontSize="12" Padding="15,5"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ======================= ТАБЛИЦА ЖУРНАЛА ======================= -->
+        <DataGrid x:Name="dgScrapLog" Grid.Row="2" Margin="20"
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  AlternatingRowBackground="{StaticResource AdditionalColor1}"
+                  GridLinesVisibility="Horizontal" HeadersVisibility="Column">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Дата списания" 
+                                   Binding="{Binding LogDate, StringFormat=dd.MM.yyyy HH:mm}" 
+                                   Width="1.5*"/>
+                <DataGridTextColumn Header="Наименование материала" 
+                                   Binding="{Binding MaterialName}" 
+                                   Width="2.5*"/>
+                <DataGridTextColumn Header="Артикул" 
+                                   Binding="{Binding MaterialArticle}" 
+                                   Width="1.5*"/>
+                <DataGridTextColumn Header="Количество списано" 
+                                   Binding="{Binding QuantityScrap, StringFormat={}{0:F3}}" 
+                                   Width="1.5*"/>
+                <DataGridTextColumn Header="Ед. изм." 
+                                   Binding="{Binding UnitName}" 
+                                   Width="1*"/>
+                <DataGridTextColumn Header="Стоимость" 
+                                   Binding="{Binding CostScrap, StringFormat=C}" 
+                                   Width="1.5*"/>
+                <DataGridTextColumn Header="Списал" 
+                                   Binding="{Binding WrittenOffBy}" 
+                                   Width="1.5*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- ======================= ИТОГОВАЯ ИНФОРМАЦИЯ ======================= -->
+        <Border Grid.Row="3" Background="{StaticResource PrimaryColor2}" Padding="20,15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="Общая стоимость списанных материалов за период:" 
+                           FontWeight="Bold" FontSize="15"
+                           Foreground="{StaticResource TextWhite}"/>
+                <TextBlock x:Name="txtTotalScrapCost" Text="0,00 руб." 
+                           FontWeight="Bold" FontSize="15" Margin="15,0"
+                           Foreground="{StaticResource TextWhite}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
