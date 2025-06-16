@@ -122,6 +122,9 @@
     </Compile>
     <Compile Include="MaterialStockItem.cs" />
     <Compile Include="ProductCompositionItem.cs" />
+    <Compile Include="ProductDesignerWindow.xaml.cs">
+      <DependentUpon>ProductDesignerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ProductDetailWindow.xaml.cs">
       <DependentUpon>ProductDetailWindow.xaml</DependentUpon>
     </Compile>
@@ -182,6 +185,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="MaterialReceiptWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ProductDesignerWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

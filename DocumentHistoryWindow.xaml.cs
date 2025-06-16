@@ -10,7 +10,7 @@ namespace UchPR
 {
     public partial class DocumentHistoryWindow : Window
     {
-        private DocumentHistoryRepository _repository;
+      //  private DocumentHistoryRepository _repository;
         private ObservableCollection<DocumentHistoryItem> _documents;
 
         public DocumentHistoryWindow()
@@ -24,8 +24,8 @@ namespace UchPR
             try
             {
                 // Используйте вашу строку подключения к базе данных
-                string connectionString = "Data Source=UchPR.db;Version=3;";
-                _repository = new DocumentHistoryRepository(connectionString);
+            //    string connectionString = "Data Source=UchPR.db;Version=3;";
+             //   _repository = new DocumentHistoryRepository(connectionString);
                 LoadDocuments();
             }
             catch (Exception ex)

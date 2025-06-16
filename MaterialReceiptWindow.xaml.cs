@@ -187,7 +187,7 @@ namespace UchPR
                 {
                     materials.Add(new MaterialItem
                     {
-                        Article = row["article"].ToString(),
+                        Id = row["article"].ToString(),
                         Name = row["name"].ToString()
                     });
                 }
@@ -734,11 +734,6 @@ namespace UchPR
         public string Name { get; set; }
     }
 
-    public class MaterialItem
-    {
-        public string Article { get; set; }
-        public string Name { get; set; }
-    }
 
     public class UnitItem
     {
