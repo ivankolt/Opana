@@ -219,7 +219,7 @@ namespace UchPR
                     {
                         Id = row["article"].ToString(),
                         Name = row["name"].ToString(),
-                        ImagePath = GetImagePath("Фурнитура", row["article"].ToString()),
+                        ImagePath = GetImagePath("Accessories", row["article"].ToString()),
                         Type = "accessory"
                     });
                 }

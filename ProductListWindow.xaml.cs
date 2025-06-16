@@ -115,6 +115,7 @@ namespace UchPR
                         SalePrice = Convert.ToDecimal(row["SalePrice"] ?? 0),
                         // Путь к изображению
                         ImagePath = GetProductImagePath(row["productid"].ToString())
+
                     };
 
                     // Расчет дополнительных полей
@@ -153,50 +154,35 @@ namespace UchPR
         {
             try
             {
-                // Используем тот же подход, что и в других формах
-                string currentDir = AppDomain.CurrentDomain.BaseDirectory;
-
-                // Поднимаемся вверх по папкам, пока не найдем папку Images
-                DirectoryInfo dir = new DirectoryInfo(currentDir);
-                while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "Images")))
-                {
-                    dir = dir.Parent;
-                }
-
-                if (dir == null)
-                {
-                    System.Diagnostics.Debug.WriteLine("❌ Папка Images не найдена");
-                    return string.Empty;
-                }
-
-                string imagesDir = Path.Combine(dir.FullName, "Images", "Изделия");
                 string[] extensions = { ".jpg", ".jpeg", ".png", ".bmp" };
 
                 foreach (string ext in extensions)
                 {
-                    string fullPath = Path.Combine(imagesDir, $"{productArticle}{ext}");
+                    string resourcePath = $"pack://application:,,,/Images/Products/{productArticle}{ext}";
 
-                    if (File.Exists(fullPath))
+                    // Проверяем существование ресурса
+                    try
                     {
-                        System.Diagnostics.Debug.WriteLine($"✓ Найдено изображение изделия: {fullPath}");
-                        return fullPath;
+                        var uri = new Uri(resourcePath);
+                        var resourceInfo = Application.GetResourceStream(uri);
+                        if (resourceInfo != null)
+                        {
+                            resourceInfo.Stream.Close();
+                            return resourcePath;
+                        }
+                    }
+                    catch
+                    {
+                        continue;
                     }
                 }
 
-                // Если изображение не найдено, возвращаем изображение по умолчанию
-                string defaultPath = Path.Combine(imagesDir, "default.jpg");
-                if (File.Exists(defaultPath))
-                {
-                    System.Diagnostics.Debug.WriteLine($"✓ Используется изображение по умолчанию: {defaultPath}");
-                    return defaultPath;
-                }
-
-                System.Diagnostics.Debug.WriteLine($"❌ Изображение для изделия {productArticle} не найдено");
-                return string.Empty;
+                // Возвращаем изображение по умолчанию
+                return "pack://application:,,,/Images/Products/default.jpg";
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ Ошибка загрузки изображения для изделия {productArticle}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"❌ Ошибка: {ex.Message}");
                 return string.Empty;
             }
         }

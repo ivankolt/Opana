@@ -49,6 +49,43 @@
                 return null;
             }
         }
+
+        public static string GetImagePath(string article, string subfolder)
+        {
+            try
+            {
+                // Используем pack URI для WPF
+                string[] extensions = { ".jpg", ".jpeg", ".png", ".bmp" };
+
+                foreach (string ext in extensions)
+                {
+                    string resourcePath = $"Images/{subfolder}/{article}{ext}";
+
+                    // Проверяем существование ресурса
+                    var resourceUri = new Uri($"pack://application:,,,/{resourcePath}");
+                    try
+                    {
+                        var resource = Application.GetResourceStream(resourceUri);
+                        if (resource != null)
+                        {
+                            resource.Stream.Close();
+                            return resourcePath; // Возвращаем относительный путь
+                        }
+                    }
+                    catch { }
+                }
+
+                // Изображение по умолчанию
+                return $"Images/{subfolder}/default.jpg";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ Ошибка: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
+
         public string GetUserName(string login)
             {
                 string name = login; // По умолчанию, если имя не найдено

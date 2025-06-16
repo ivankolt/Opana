@@ -108,6 +108,7 @@ namespace UchPR
                         unit_name = row["unit_name"]?.ToString() ?? "шт",
                         // Путь к изображению
                         ImagePath = GetAccessoryImagePath(row["article"].ToString())
+
                     };
 
                     accessoriesList.Add(accessory);
@@ -129,52 +130,37 @@ namespace UchPR
         {
             try
             {
-                // Более надежный способ получения корня проекта
-                string currentDir = AppDomain.CurrentDomain.BaseDirectory;
-
-                // Поднимаемся вверх по папкам, пока не найдем папку Images
-                DirectoryInfo dir = new DirectoryInfo(currentDir);
-                while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "Images")))
-                {
-                    dir = dir.Parent;
-                }
-
-                if (dir == null)
-                {
-                    System.Diagnostics.Debug.WriteLine("❌ Папка Images не найдена");
-                    return string.Empty;
-                }
-
-                string imagesDir = Path.Combine(dir.FullName, "Images", "Фурнитура");
                 string[] extensions = { ".jpg", ".jpeg", ".png", ".bmp" };
 
                 foreach (string ext in extensions)
                 {
-                    string imagePath = Path.Combine(imagesDir, $"{accessoryArticle}{ext}");
+                    string resourcePath = $"pack://application:,,,/Images/Accessories/{accessoryArticle}{ext}";
 
-                    if (File.Exists(imagePath))
+                    // Проверяем существование ресурса
+                    try
                     {
-                        string relativePath = $"Images/Фурнитура/{accessoryArticle}{ext}";
-                        System.Diagnostics.Debug.WriteLine($"✓ Найдено изображение: {imagePath}");
-                        return $"/{relativePath}";
+                        var uri = new Uri(resourcePath);
+                        var resourceInfo = Application.GetResourceStream(uri);
+                        if (resourceInfo != null)
+                        {
+                            resourceInfo.Stream.Close();
+                            return resourcePath;
+                        }
+                    }
+                    catch
+                    {
+                        continue;
                     }
                 }
 
-                // Изображение по умолчанию
-                string defaultPath = Path.Combine(imagesDir, "default.jpg");
-                if (File.Exists(defaultPath))
-                {
-                    return "/Images/Фурнитура/default.jpg";
-                }
-
-                return string.Empty;
+                // Возвращаем изображение по умолчанию
+                return "pack://application:,,,/Images/Accessories/default.jpg";
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"❌ Ошибка: {ex.Message}");
                 return string.Empty;
             }
-        
         }
 
 

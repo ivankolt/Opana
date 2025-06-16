@@ -171,6 +171,7 @@ namespace UchPR
                         MinStock = Convert.ToDecimal(row["MinStock"] ?? 0),
                         // Путь к изображению
                         ImagePath = GetFabricImagePath(Convert.ToInt32(row["fabric_article"]))
+
                     };
 
                     fabricsList.Add(fabric);
@@ -199,45 +200,31 @@ namespace UchPR
         {
             try
             {
-                // Более надежный способ получения корня проекта
-                string currentDir = AppDomain.CurrentDomain.BaseDirectory;
-
-                // Поднимаемся вверх по папкам, пока не найдем папку Images
-                DirectoryInfo dir = new DirectoryInfo(currentDir);
-                while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "Images")))
-                {
-                    dir = dir.Parent;
-                }
-
-                if (dir == null)
-                {
-                    System.Diagnostics.Debug.WriteLine("❌ Папка Images не найдена");
-                    return string.Empty;
-                }
-
-                string imagesDir = Path.Combine(dir.FullName, "Images", "Ткани");
                 string[] extensions = { ".jpg", ".jpeg", ".png", ".bmp" };
 
                 foreach (string ext in extensions)
                 {
-                    string imagePath = Path.Combine(imagesDir, $"{fabricArticle}{ext}");
+                    string resourcePath = $"pack://application:,,,/Images/Fabric/{fabricArticle}{ext}";
 
-                    if (File.Exists(imagePath))
+                    // Проверяем существование ресурса
+                    try
                     {
-                        string relativePath = $"Images/Ткани/{fabricArticle}{ext}";
-                        System.Diagnostics.Debug.WriteLine($"✓ Найдено изображение: {imagePath}");
-                        return $"/{relativePath}";
+                        var uri = new Uri(resourcePath);
+                        var resourceInfo = Application.GetResourceStream(uri);
+                        if (resourceInfo != null)
+                        {
+                            resourceInfo.Stream.Close();
+                            return resourcePath;
+                        }
+                    }
+                    catch
+                    {
+                        continue;
                     }
                 }
 
-                // Изображение по умолчанию
-                string defaultPath = Path.Combine(imagesDir, "default.jpg");
-                if (File.Exists(defaultPath))
-                {
-                    return "/Images/Ткани/default.jpg";
-                }
-
-                return string.Empty;
+                // Возвращаем изображение по умолчанию
+                return "pack://application:,,,/Images/Fabric/default.jpg";
             }
             catch (Exception ex)
             {

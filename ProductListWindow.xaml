@@ -36,7 +36,7 @@
                     <!-- Изображение изделия -->
                     <Border Grid.Row="0" Background="{StaticResource AdditionalColor2}" 
                     CornerRadius="10" Margin="0,0,0,15">
-                        <Image Source="{Binding ImagePath}" 
+                        <Image Source="{Binding ImagePath, TargetNullValue={x:Null}}"        
                        Stretch="UniformToFill"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
