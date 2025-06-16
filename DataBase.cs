@@ -12,40 +12,44 @@
         {
             public string connectionString = "Host=localhost;Username=postgres;Password=12345;Database=UchPR";
 
-            /// <summary>
-            /// Проверяет учетные данные пользователя и возвращает его роль.
-            /// </summary>
-            /// <returns>Роль пользователя или null, если аутентификация не удалась.</returns>
-            public string AuthenticateUser(string login, string password)
+        /// <summary>
+        /// Проверяет учетные данные пользователя и возвращает его роль.
+        /// </summary>
+        /// <returns>Роль пользователя или null, если аутентификация не удалась.</returns>
+        public string AuthenticateUser(string login, string password)
+        {
+            try
             {
-                string role = null;
-                try
-                {
-                    using (var conn = new NpgsqlConnection(connectionString))
-                    {
-                        conn.Open();
-                        var sql = "SELECT role FROM public.users WHERE login = @login AND password = @password";
-                        using (var cmd = new NpgsqlCommand(sql, conn))
-                        {
-                            cmd.Parameters.AddWithValue("login", login);
-                            cmd.Parameters.AddWithValue("password", password);
-                            var result = cmd.ExecuteScalar();
-                            if (result != null)
-                            {
-                                role = result.ToString();
-                            }
-                        }
-                    }
-                }
-                catch (NpgsqlException)
-                {
-                    // Просто возвращаем null в случае ошибки. UI сам решит, что показать.
-                    return null;
-                }
-                return role;
-            }
+                string query = @"
+            SELECT u.login, u.password, u.role::text as role_name 
+            FROM users u
+            WHERE u.login = @login AND u.password = @password";
 
-            public string GetUserName(string login)
+                var parameters = new NpgsqlParameter[]
+                {
+            new NpgsqlParameter("@login", login),
+            new NpgsqlParameter("@password", password)
+                };
+
+                var data = GetData(query, parameters);
+
+                if (data.Rows.Count > 0)
+                {
+                    string role = data.Rows[0]["role_name"].ToString();
+                    System.Diagnostics.Debug.WriteLine($"✓ Аутентификация успешна. Пользователь: {login}, Роль: {role}");
+                    return role;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"❌ Неверный логин или пароль для пользователя: {login}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ Ошибка аутентификации: {ex.Message}");
+                return null;
+            }
+        }
+        public string GetUserName(string login)
             {
                 string name = login; // По умолчанию, если имя не найдено
                 try
@@ -778,11 +782,9 @@
             {
                 string query = @"
             SELECT 
-                u.login,
-                COALESCE(u.full_name, u.login) as full_name,
-                COALESCE(r.name, 'Пользователь') as role_name
+                COALESCE(u.name, u.login) as full_name,
+                u.role::text as role_name
             FROM users u
-            LEFT JOIN roles r ON u.role_id = r.id
             WHERE u.login = @login";
 
                 var parameters = new NpgsqlParameter[] {
