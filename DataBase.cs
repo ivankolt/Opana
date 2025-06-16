@@ -8,7 +8,7 @@
 
     namespace UchPR
     {
-        internal class DataBase
+        public class DataBase
         {
             public string connectionString = "Host=localhost;Username=postgres;Password=12345;Database=UchPR";
 
@@ -772,8 +772,49 @@
 
                 return result;
             }
+        public UserData GetUserData(string login)
+        {
+            try
+            {
+                string query = @"
+            SELECT 
+                u.login,
+                COALESCE(u.full_name, u.login) as full_name,
+                COALESCE(r.name, 'Пользователь') as role_name
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE u.login = @login";
 
-            public NpgsqlConnection GetConnection()
+                var parameters = new NpgsqlParameter[] {
+            new NpgsqlParameter("@login", login)
+        };
+
+                var data = GetData(query, parameters);
+
+                if (data.Rows.Count > 0)
+                {
+                    var row = data.Rows[0];
+                    var userData = new UserData
+                    {
+                        FullName = row["full_name"].ToString(),
+                        Role = row["role_name"].ToString()
+                    };
+
+                    System.Diagnostics.Debug.WriteLine($"✓ Данные пользователя получены. Логин: {login}, Роль: {userData.Role}");
+                    return userData;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"❌ Пользователь {login} не найден");
+                return new UserData { FullName = login, Role = "Пользователь" };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ Ошибка получения данных пользователя: {ex.Message}");
+                return new UserData { FullName = login, Role = "Пользователь" };
+            }
+        }
+
+        public NpgsqlConnection GetConnection()
             {
                 return new NpgsqlConnection(connectionString);
             }

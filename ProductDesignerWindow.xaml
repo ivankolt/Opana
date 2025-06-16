@@ -179,9 +179,10 @@
                                 Width="320" Click="BtnAddCustomAccessory_Click"/>
 
                         <!-- Список добавленной фурнитуры -->
+                        <!-- Список добавленной фурнитуры -->
                         <TextBlock Text="Добавленная фурнитура:" Style="{StaticResource HeaderText}"/>
                         <ListBox x:Name="lbAccessories" Height="150" Width="320" 
-                                 SelectionChanged="LbAccessories_SelectionChanged">
+         SelectionChanged="LbAccessories_SelectionChanged">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -191,22 +192,52 @@
                                             <TextBlock Text="{Binding Position}" FontSize="10" Foreground="Gray"/>
                                         </StackPanel>
                                         <Button Content="×" Width="20" Height="20" 
-                                                Background="Red" Foreground="White" 
-                                                Click="BtnRemoveAccessory_Click" 
-                                                Tag="{Binding}"/>
+                        Background="Red" Foreground="White" 
+                        Click="BtnRemoveAccessory_Click" 
+                        Tag="{Binding}"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
 
+                        <!-- ВЫНЕСЕНО: Управление размером выбранной фурнитуры -->
+                        <TextBlock Text="Управление размером:" Style="{StaticResource HeaderText}"/>
+                        <Grid Margin="0,5,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="Ширина:" Style="{StaticResource LabelText}"/>
+                            <TextBox Grid.Column="1" x:Name="tbAccessoryWidth" Text="50" 
+             TextChanged="TbAccessorySize_TextChanged"/>
+                            <TextBlock Grid.Column="2" Text="Высота:" Style="{StaticResource LabelText}" Margin="10,0,5,0"/>
+                            <TextBox Grid.Column="3" x:Name="tbAccessoryHeight" Text="50" 
+             TextChanged="TbAccessorySize_TextChanged"/>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Button Content="Сбросить размер" Width="100" Height="25" Margin="0,0,5,0"
+            Click="BtnResetSize_Click" Style="{StaticResource PrimaryButton}"/>
+                            <Button Content="Применить размер" Width="100" Height="25" Margin="5,0,0,0"
+            Click="BtnApplySize_Click" Style="{StaticResource PrimaryButton}"/>
+                        </StackPanel>
+
                         <!-- Инструкции -->
                         <TextBlock Text="Инструкции:" Style="{StaticResource HeaderText}"/>
                         <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="DarkGray">
-                            • Перетаскивайте фурнитуру мышью<LineBreak/>
-                            • Вращайте колесиком мыши<LineBreak/>
-                            • Изменяйте размер за углы<LineBreak/>
-                            • Кликните для выделения
+    • Выберите фурнитуру из списка<LineBreak/>
+    • Перетаскивайте фурнитуру мышью<LineBreak/>
+    • Ctrl + мышь - изменение размера<LineBreak/>
+    • Shift + колесико - изменение размера<LineBreak/>
+    • Колесико мыши - поворот<LineBreak/>
+    • Используйте поля выше для точного размера
                         </TextBlock>
+
+
                     </StackPanel>
                 </ScrollViewer>
             </Border>

@@ -116,11 +116,13 @@
     <Compile Include="FabricListWindow.xaml.cs">
       <DependentUpon>FabricListWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Interfaces.cs" />
     <Compile Include="MaterialReceiptItem.cs" />
     <Compile Include="MaterialReceiptWindow.xaml.cs">
       <DependentUpon>MaterialReceiptWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="MaterialStockItem.cs" />
+    <Compile Include="Models.cs" />
     <Compile Include="ProductCompositionItem.cs" />
     <Compile Include="ProductDesignerWindow.xaml.cs">
       <DependentUpon>ProductDesignerWindow.xaml</DependentUpon>
@@ -145,10 +147,12 @@
     <Compile Include="ScrapLogWindow.xaml.cs">
       <DependentUpon>ScrapLogWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Services.cs" />
     <Compile Include="ThresholdSettingsItem.cs" />
     <Compile Include="ThresholdSettingsWindow.xaml.cs">
       <DependentUpon>ThresholdSettingsWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserSessionService.cs" />
     <Compile Include="WarehousePage.xaml.cs">
       <DependentUpon>WarehousePage.xaml</DependentUpon>
     </Compile>
@@ -2302,6 +2306,12 @@
     <Resource Include="Images\Logo\logo-02.jpg" />
     <Resource Include="Images\Logo\logo-03.jpg" />
     <Resource Include="Images\Logo\logo-04.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Изделия\default.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Ткани\default.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

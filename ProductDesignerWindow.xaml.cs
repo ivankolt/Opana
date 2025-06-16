@@ -27,6 +27,9 @@ namespace UchPR
         private Point lastMousePosition;
         private bool isDragging = false;
         private int? currentDesignId;
+        private bool isResizing = false;
+        private Point resizeStartPoint;
+        private Size originalSize;
 
         public ProductDesignerWindow(string userLogin, string userPassword)
         {
@@ -50,6 +53,10 @@ namespace UchPR
             cbBorderColor.Items.Add("Коричневый");
             cbBorderColor.Items.Add("Серый");
             cbBorderColor.SelectedIndex = 0;
+
+            // Инициализация полей размера
+            tbAccessoryWidth.Text = "50";
+            tbAccessoryHeight.Text = "50";
 
             UpdateProductDimensions();
         }
@@ -131,6 +138,59 @@ namespace UchPR
                 MessageBox.Show($"Ошибка загрузки тканей: {ex.Message}");
             }
         }
+        private void TbAccessorySize_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // Обновляем размер выбранной фурнитуры при изменении значений в текстовых полях
+            if (selectedElement != null && selectedElement is Image image)
+            {
+                if (double.TryParse(tbAccessoryWidth.Text, out double width) && width > 0 &&
+                    double.TryParse(tbAccessoryHeight.Text, out double height) && height > 0)
+                {
+                    width = Math.Max(20, Math.Min(200, width));
+                    height = Math.Max(20, Math.Min(200, height));
+
+                    image.Width = width;
+                    image.Height = height;
+
+                    UpdateAccessorySize(width, height);
+                }
+            }
+        }
+
+        private void BtnResetSize_Click(object sender, RoutedEventArgs e)
+        {
+            if (selectedElement != null && selectedElement is Image image)
+            {
+                image.Width = 50;
+                image.Height = 50;
+
+                tbAccessoryWidth.Text = "50";
+                tbAccessoryHeight.Text = "50";
+
+                UpdateAccessorySize(50, 50);
+                Console.WriteLine("Размер сброшен к 50x50");
+            }
+        }
+
+        private void BtnApplySize_Click(object sender, RoutedEventArgs e)
+        {
+            if (selectedElement != null && selectedElement is Image image)
+            {
+                if (double.TryParse(tbAccessoryWidth.Text, out double width) && width > 0 &&
+                    double.TryParse(tbAccessoryHeight.Text, out double height) && height > 0)
+                {
+                    width = Math.Max(20, Math.Min(200, width));
+                    height = Math.Max(20, Math.Min(200, height));
+
+                    image.Width = width;
+                    image.Height = height;
+
+                    UpdateAccessorySize(width, height);
+                    Console.WriteLine($"Применен размер: {width}x{height}");
+                }
+            }
+        }
+
 
         private void LoadBorders()
         {
@@ -202,17 +262,57 @@ namespace UchPR
 
         private string GetImagePath(string folder, string article)
         {
+            Console.WriteLine($"=== GetImagePath Debug ===");
+            Console.WriteLine($"Folder: {folder}");
+            Console.WriteLine($"Article: {article}");
+
             string[] extensions = { ".jpg", ".jpeg", ".png", ".bmp" };
+
+            // ИСПРАВЛЕНО: Полностью убираем bin из пути
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            Console.WriteLine($"Original base directory: {baseDirectory}");
+
+            // Поднимаемся вверх до корня проекта (убираем bin\Debug или bin\Release)
+            string projectRoot = baseDirectory;
+
+            // Убираем bin\Debug или bin\Release
+            if (projectRoot.Contains("\\bin\\"))
+            {
+                int binIndex = projectRoot.IndexOf("\\bin\\");
+                projectRoot = projectRoot.Substring(0, binIndex);
+            }
+
+            Console.WriteLine($"Project root (without bin): {projectRoot}");
 
             foreach (string ext in extensions)
             {
-                string path = $"Images/{folder}/{article}{ext}";
-                if (System.IO.File.Exists(path))
-                    return path;
+                // Формируем путь напрямую к папке Images в корне проекта
+                string fullPath = System.IO.Path.Combine(projectRoot, "Images", folder, $"{article}{ext}");
+                Console.WriteLine($"Checking: {fullPath}");
+                Console.WriteLine($"File exists: {System.IO.File.Exists(fullPath)}");
+
+                if (System.IO.File.Exists(fullPath))
+                {
+                    Console.WriteLine($"✓ Found image! Full path: {fullPath}");
+                    return fullPath;
+                }
             }
 
-            return $"Images/{folder}/default.jpg";
+            // Проверяем default изображение
+            string defaultFullPath = System.IO.Path.Combine(projectRoot, "Images", folder, "default.jpg");
+            Console.WriteLine($"Checking default path: {defaultFullPath}");
+            Console.WriteLine($"Default exists: {System.IO.File.Exists(defaultFullPath)}");
+
+            if (System.IO.File.Exists(defaultFullPath))
+            {
+                Console.WriteLine($"✓ Using default image! Full path: {defaultFullPath}");
+                return defaultFullPath;
+            }
+
+            Console.WriteLine($"❌ No image found for {folder}/{article}");
+            return string.Empty;
         }
+
 
         // ======================= ОБРАБОТЧИКИ СОБЫТИЙ ИНТЕРФЕЙСА =======================
 
@@ -243,19 +343,104 @@ namespace UchPR
             {
                 try
                 {
-                    var imageBrush = new ImageBrush();
-                    imageBrush.ImageSource = new BitmapImage(new Uri(selectedFabric.ImagePath, UriKind.RelativeOrAbsolute));
-                    imageBrush.Stretch = Stretch.UniformToFill;
-                    MainProduct.Fill = imageBrush;
+                    Console.WriteLine($"Loading fabric image: {selectedFabric.ImagePath}");
 
-                    // Обновляем предпросмотр
-                    imgFabricPreview.Source = imageBrush.ImageSource;
+                    var imageBrush = new ImageBrush();
+                    var bitmapImage = CreateBitmapImageSafely(selectedFabric.ImagePath);
+
+                    if (bitmapImage != null)
+                    {
+                        imageBrush.ImageSource = bitmapImage;
+                        imageBrush.Stretch = Stretch.UniformToFill;
+                        MainProduct.Fill = imageBrush;
+                        imgFabricPreview.Source = bitmapImage;
+                        Console.WriteLine("✓ Image loaded successfully!");
+                    }
+                    else
+                    {
+                        MainProduct.Fill = Brushes.LightGray;
+                        Console.WriteLine("❌ Failed to load image, using default color");
+                    }
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine($"❌ Error loading image: {ex.Message}");
                     MainProduct.Fill = Brushes.White;
-                    MessageBox.Show($"Ошибка загрузки изображения ткани: {ex.Message}");
                 }
+            }
+        }
+
+        private BitmapImage CreateBitmapImageSafely(string imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath))
+            {
+                Console.WriteLine("Image path is empty");
+                return null;
+            }
+
+            try
+            {
+                var bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+
+                // ИСПРАВЛЕНИЕ: Добавляем дополнительные параметры для избежания ошибок
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+
+                // Проверяем тип URI
+                if (imagePath.StartsWith("pack://"))
+                {
+                    bitmapImage.UriSource = new Uri(imagePath, UriKind.Absolute);
+                }
+                else if (System.IO.File.Exists(imagePath))
+                {
+                    bitmapImage.UriSource = new Uri(imagePath, UriKind.Absolute);
+                }
+                else
+                {
+                    Console.WriteLine($"File not found: {imagePath}");
+                    bitmapImage.EndInit();
+                    return null;
+                }
+
+                bitmapImage.EndInit();
+                bitmapImage.Freeze(); // Важно для многопоточности
+
+                return bitmapImage;
+            }
+            catch (NotSupportedException ex)
+            {
+                Console.WriteLine($"NotSupportedException: {ex.Message}");
+                return CreateFallbackImage();
+            }
+            catch (System.IO.FileNotFoundException ex)
+            {
+                Console.WriteLine($"File not found: {ex.Message}");
+                return CreateFallbackImage();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General exception: {ex.Message}");
+                return CreateFallbackImage();
+            }
+        }
+
+        private BitmapImage CreateFallbackImage()
+        {
+            try
+            {
+                // Создаем простое изображение-заглушку
+                var fallbackBitmap = new BitmapImage();
+                fallbackBitmap.BeginInit();
+                fallbackBitmap.UriSource = new Uri("pack://application:,,,/Images/default.png", UriKind.Absolute);
+                fallbackBitmap.CacheOption = BitmapCacheOption.OnLoad;
+                fallbackBitmap.EndInit();
+                fallbackBitmap.Freeze();
+                return fallbackBitmap;
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -378,64 +563,149 @@ namespace UchPR
         private void DesignCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             var element = e.Source as UIElement;
-            if (element != null && element != DesignCanvas && element is Image)
+            if (element != null && element != DesignCanvas && element is Image image)
             {
                 selectedElement = element;
                 lastMousePosition = e.GetPosition(DesignCanvas);
-                isDragging = true;
-                DesignCanvas.CaptureMouse();
 
-                // Выделяем элемент
+                // Проверяем, нажата ли клавиша Ctrl для изменения размера
+                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                {
+                    isResizing = true;
+                    resizeStartPoint = e.GetPosition(DesignCanvas);
+                    originalSize = new Size(image.Width, image.Height);
+                    Console.WriteLine("Режим изменения размера активирован");
+                }
+                else
+                {
+                    isDragging = true;
+                }
+
+                DesignCanvas.CaptureMouse();
                 HighlightSelectedElement();
             }
         }
+        private void UpdateAccessoryProperties()
+        {
+            if (selectedElement == null) return;
+
+            var designItem = designAccessories.FirstOrDefault(x => x.CanvasElement == selectedElement);
+            if (designItem != null && selectedElement is Image image)
+            {
+                designItem.X = Canvas.GetLeft(selectedElement);
+                designItem.Y = Canvas.GetTop(selectedElement);
+                designItem.Width = image.Width;
+                designItem.Height = image.Height;
+                designItem.Position = $"X: {designItem.X:F0}, Y: {designItem.Y:F0}, Размер: {designItem.Width:F0}x{designItem.Height:F0}";
+            }
+        }
+
 
         private void DesignCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (isDragging)
+            if (isDragging || isResizing)
             {
                 isDragging = false;
+                isResizing = false;
                 DesignCanvas.ReleaseMouseCapture();
 
-                // Обновляем позицию в списке
-                UpdateAccessoryPosition();
+                // Обновляем позицию и размер в списке
+                UpdateAccessoryProperties();
             }
         }
-
         private void DesignCanvas_MouseMove(object sender, MouseEventArgs e)
         {
-            if (isDragging && selectedElement != null)
+            if (selectedElement != null && selectedElement is Image image)
             {
-                Point position = e.GetPosition(DesignCanvas);
-                double offsetX = position.X - lastMousePosition.X;
-                double offsetY = position.Y - lastMousePosition.Y;
+                Point currentPosition = e.GetPosition(DesignCanvas);
 
-                double left = Canvas.GetLeft(selectedElement) + offsetX;
-                double top = Canvas.GetTop(selectedElement) + offsetY;
+                if (isResizing)
+                {
+                    // Изменение размера
+                    double deltaX = currentPosition.X - resizeStartPoint.X;
+                    double deltaY = currentPosition.Y - resizeStartPoint.Y;
 
-                // Ограничиваем перемещение границами Canvas
-                left = Math.Max(0, Math.Min(DesignCanvas.Width - selectedElement.RenderSize.Width, left));
-                top = Math.Max(0, Math.Min(DesignCanvas.Height - selectedElement.RenderSize.Height, top));
+                    // Вычисляем новый размер на основе движения мыши
+                    double scaleFactor = 1.0 + (deltaX + deltaY) / 200.0; // Коэффициент масштабирования
+                    scaleFactor = Math.Max(0.2, Math.Min(5.0, scaleFactor)); // Ограничиваем размер
 
-                Canvas.SetLeft(selectedElement, left);
-                Canvas.SetTop(selectedElement, top);
+                    double newWidth = originalSize.Width * scaleFactor;
+                    double newHeight = originalSize.Height * scaleFactor;
 
-                lastMousePosition = position;
+                    // Ограничиваем минимальный и максимальный размер
+                    newWidth = Math.Max(20, Math.Min(200, newWidth));
+                    newHeight = Math.Max(20, Math.Min(200, newHeight));
+
+                    image.Width = newWidth;
+                    image.Height = newHeight;
+
+                    Console.WriteLine($"Изменение размера: {newWidth:F0}x{newHeight:F0}");
+                }
+                else if (isDragging)
+                {
+                    // Перетаскивание
+                    double offsetX = currentPosition.X - lastMousePosition.X;
+                    double offsetY = currentPosition.Y - lastMousePosition.Y;
+
+                    double left = Canvas.GetLeft(selectedElement) + offsetX;
+                    double top = Canvas.GetTop(selectedElement) + offsetY;
+
+                    // Ограничиваем перемещение границами Canvas
+                    left = Math.Max(0, Math.Min(DesignCanvas.Width - selectedElement.RenderSize.Width, left));
+                    top = Math.Max(0, Math.Min(DesignCanvas.Height - selectedElement.RenderSize.Height, top));
+
+                    Canvas.SetLeft(selectedElement, left);
+                    Canvas.SetTop(selectedElement, top);
+
+                    lastMousePosition = currentPosition;
+                }
             }
         }
+        private void UpdateAccessorySize(double width, double height)
+        {
+            if (selectedElement == null) return;
 
+            var designItem = designAccessories.FirstOrDefault(x => x.CanvasElement == selectedElement);
+            if (designItem != null)
+            {
+                designItem.Width = width;
+                designItem.Height = height;
+                designItem.Position = $"X: {designItem.X:F0}, Y: {designItem.Y:F0}, Размер: {width:F0}x{height:F0}";
+            }
+        }
         private void DesignCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (selectedElement != null && selectedElement is Image image)
             {
-                var transform = image.RenderTransform as RotateTransform ?? new RotateTransform();
-                transform.Angle += e.Delta > 0 ? 15 : -15;
-                transform.CenterX = image.Width / 2;
-                transform.CenterY = image.Height / 2;
-                image.RenderTransform = transform;
+                // Если зажата клавиша Shift - изменяем размер
+                if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+                {
+                    double scaleFactor = e.Delta > 0 ? 1.1 : 0.9;
 
-                // Обновляем угол поворота в списке
-                UpdateAccessoryRotation(transform.Angle);
+                    double newWidth = image.Width * scaleFactor;
+                    double newHeight = image.Height * scaleFactor;
+
+                    // Ограничиваем размер
+                    newWidth = Math.Max(20, Math.Min(200, newWidth));
+                    newHeight = Math.Max(20, Math.Min(200, newHeight));
+
+                    image.Width = newWidth;
+                    image.Height = newHeight;
+
+                    UpdateAccessorySize(newWidth, newHeight);
+                    Console.WriteLine($"Изменение размера колесиком: {newWidth:F0}x{newHeight:F0}");
+                }
+                else
+                {
+                    // Поворот (как было раньше)
+                    var transform = image.RenderTransform as RotateTransform ?? new RotateTransform();
+                    transform.Angle += e.Delta > 0 ? 15 : -15;
+                    transform.CenterX = image.Width / 2;
+                    transform.CenterY = image.Height / 2;
+                    image.RenderTransform = transform;
+
+                    UpdateAccessoryRotation(transform.Angle);
+                }
             }
         }
 
@@ -462,11 +732,11 @@ namespace UchPR
             if (selectedElement == null) return;
 
             var designItem = designAccessories.FirstOrDefault(x => x.CanvasElement == selectedElement);
-            if (designItem != null)
+            if (designItem != null && selectedElement is Image image)
             {
                 designItem.X = Canvas.GetLeft(selectedElement);
                 designItem.Y = Canvas.GetTop(selectedElement);
-                designItem.Position = $"X: {designItem.X:F0}, Y: {designItem.Y:F0}";
+                designItem.Position = $"X: {designItem.X:F0}, Y: {designItem.Y:F0}, Размер: {image.Width:F0}x{image.Height:F0}";
             }
         }
 
@@ -488,8 +758,23 @@ namespace UchPR
             {
                 selectedElement = selectedItem.CanvasElement;
                 HighlightSelectedElement();
+
+                // Обновляем поля размера для выбранной фурнитуры
+                if (selectedElement is Image image)
+                {
+                    tbAccessoryWidth.Text = image.Width.ToString("F0");
+                    tbAccessoryHeight.Text = image.Height.ToString("F0");
+                    Console.WriteLine($"Выбрана фурнитура: {selectedItem.Name}, размер: {image.Width}x{image.Height}");
+                }
+            }
+            else
+            {
+                // Если ничего не выбрано, устанавливаем значения по умолчанию
+                tbAccessoryWidth.Text = "50";
+                tbAccessoryHeight.Text = "50";
             }
         }
+
 
         private void BtnRemoveAccessory_Click(object sender, RoutedEventArgs e)
         {
@@ -571,7 +856,8 @@ namespace UchPR
                 Width = 400,
                 Height = 200,
                 Title = caption,
-                WindowStartupLocation = WindowStartupLocation.CenterParent,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+
                 Owner = this
             };
 

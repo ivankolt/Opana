@@ -10,7 +10,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Заголовок и фильтры -->
+  
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
             <TextBlock Text="Фильтр по статусу:" VerticalAlignment="Center" Margin="0,0,10,0"/>
             <ComboBox Name="StatusFilterComboBox" Width="150" 
@@ -25,7 +25,7 @@
                      TextChanged="SearchTextBox_TextChanged"/>
         </StackPanel>
 
-        <!-- Список документов -->
+      
         <DataGrid Grid.Row="1" Name="DocumentsDataGrid" 
                   AutoGenerateColumns="False" 
                   IsReadOnly="True"
@@ -44,8 +44,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Кнопки управления -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" 
+        <!--<StackPanel Grid.Row="2" Orientation="Horizontal" 
                     HorizontalAlignment="Right" Margin="10">
             <Button Name="ViewButton" Content="Просмотреть" 
                     Width="100" Height="30" Margin="5"
@@ -56,6 +55,6 @@
             <Button Name="CloseButton" Content="Закрыть" 
                     Width="100" Height="30" Margin="5"
                     Click="CloseButton_Click"/>
-        </StackPanel>
+        </StackPanel>-->
     </Grid>
 </Window>

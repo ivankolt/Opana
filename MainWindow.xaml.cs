@@ -1,26 +1,26 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace UchPR
 {
     public partial class MainWindow : Window
     {
+
+        private readonly IUserSessionService _userSessionService;
         private string currentUserRole;
         private string currentUserName;
 
-        public MainWindow(string userRole, string userName)
+        public MainWindow(string userRole, string userName, IUserSessionService userSessionService = null)
         {
             InitializeComponent();
-            
+            _userSessionService = userSessionService ?? new UserSessionService();
+
             currentUserRole = userRole;
             currentUserName = userName;
-            
+
             UserInfo.Text = $"Пользователь: {userName}, Роль: {userRole}";
-            
-            // Настройка видимости кнопок в зависимости от роли
             ConfigureNavigationByRole();
-            
-            // Установка начальной страницы
             SetInitialPage();
         }
 
@@ -73,12 +73,12 @@ namespace UchPR
 
         private void ConfigureManagerNavigation()
         {
-            // Менеджер видит изделия и заказы
+            // Менеджер видит изделия, конструктор и заказы
             btnProductList.Visibility = Visibility.Visible;
+            btnProductDesigner.Visibility = Visibility.Visible; // ДОБАВЛЕНО
             btnOrders.Visibility = Visibility.Visible;
             btnWarehouse.Visibility = Visibility.Visible; // Доступ к складу только для просмотра
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
-
         }
 
         private void ConfigureDirectorNavigation()
@@ -86,20 +86,50 @@ namespace UchPR
             // Руководитель видит все, включая отчеты
             btnWarehouse.Visibility = Visibility.Visible;
             btnProductList.Visibility = Visibility.Visible;
+            btnProductDesigner.Visibility = Visibility.Visible; // ДОБАВЛЕНО
             btnOrders.Visibility = Visibility.Visible;
             btnReports.Visibility = Visibility.Visible;
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
+        }
 
+        private void BtnProductDesigner_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Получаем данные пользователя для передачи в конструктор
+                string userLogin = GetCurrentUserLogin(); // Реализуйте этот метод
+                string userPassword = GetCurrentUserPassword(); // Реализуйте этот метод
+
+                var designerWindow = new ProductDesignerWindow(userLogin, userPassword);
+                designerWindow.Owner = this;
+                designerWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка открытия конструктора изделий: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private string GetCurrentUserLogin()
+        {
+            return _userSessionService.GetCurrentUserLogin();
+        }
+
+        private string GetCurrentUserPassword()
+        {
+            return _userSessionService.GetCurrentUserPassword();
         }
 
         private void ConfigureCustomerNavigation()
         {
-            // Заказчик видит только каталог и свои заказы
+            // Заказчик видит каталог, свои заказы и конструктор
             btnCatalog.Visibility = Visibility.Visible;
             btnMyOrders.Visibility = Visibility.Visible;
+            btnProductDesigner.Visibility = Visibility.Visible; // ДОБАВЛЕНО для заказчиков
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
-
         }
+
         private void BtnMaterialReceipt_Click(object sender, RoutedEventArgs e)
         {
             // Только для кладовщика!

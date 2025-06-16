@@ -10,7 +10,7 @@ namespace UchPR
 {
     public partial class DocumentHistoryWindow : Window
     {
-      //  private DocumentHistoryRepository _repository;
+        //  private DocumentHistoryRepository _repository;
         private ObservableCollection<DocumentHistoryItem> _documents;
 
         public DocumentHistoryWindow()
@@ -24,8 +24,8 @@ namespace UchPR
             try
             {
                 // Используйте вашу строку подключения к базе данных
-            //    string connectionString = "Data Source=UchPR.db;Version=3;";
-             //   _repository = new DocumentHistoryRepository(connectionString);
+                //    string connectionString = "Data Source=UchPR.db;Version=3;";
+                //   _repository = new DocumentHistoryRepository(connectionString);
                 LoadDocuments();
             }
             catch (Exception ex)
@@ -39,8 +39,8 @@ namespace UchPR
         {
             try
             {
-                var documents = _repository.GetAllDocuments();
-                _documents = new ObservableCollection<DocumentHistoryItem>(documents);
+               // var documents = _repository.GetAllDocuments();
+              //  _documents = new ObservableCollection<DocumentHistoryItem>(documents);
                 DocumentsDataGrid.ItemsSource = _documents;
             }
             catch (Exception ex)
@@ -62,7 +62,7 @@ namespace UchPR
 
         private void ApplyFilters()
         {
-            if (_repository == null) return;
+         //   if (_repository == null) return;
 
             try
             {
@@ -71,12 +71,12 @@ namespace UchPR
 
                 string statusFilter = (selectedStatus == "Все документы") ? null : selectedStatus;
 
-                var filteredDocuments = _repository.SearchDocuments(searchText, statusFilter);
+             //   var filteredDocuments = _repository.SearchDocuments(searchText, statusFilter);
                 _documents.Clear();
 
-                foreach (var doc in filteredDocuments)
+               // foreach (var doc in filteredDocuments)
                 {
-                    _documents.Add(doc);
+               //     _documents.Add(doc);
                 }
             }
             catch (Exception ex)
@@ -109,12 +109,12 @@ namespace UchPR
                 else
                 {
                     // Если файл не найден, попробуем открыть из базы данных
-                    var documentData = _repository.GetDocumentData(selectedDocument.Id);
-                    if (documentData != null && documentData.Length > 0)
+                 //   var documentData = _repository.GetDocumentData(selectedDocument.Id);
+                  //  if (documentData != null && documentData.Length > 0)
                     {
                         // Создаем временный файл и открываем его
                         string tempPath = Path.GetTempFileName();
-                        File.WriteAllBytes(tempPath, documentData);
+                  //      File.WriteAllBytes(tempPath, documentData);
 
                         Process.Start(new ProcessStartInfo
                         {
@@ -122,7 +122,7 @@ namespace UchPR
                             UseShellExecute = true
                         });
                     }
-                    else
+               //     else
                     {
                         MessageBox.Show("Документ не найден.", "Ошибка",
                             MessageBoxButton.OK, MessageBoxImage.Error);
@@ -156,7 +156,7 @@ namespace UchPR
             {
                 try
                 {
-                    _repository.DeleteDocument(selectedDocument.Id);
+                    //_repository.DeleteDocument(selectedDocument.Id);
                     _documents.Remove(selectedDocument);
 
                     MessageBox.Show("Документ успешно удалён.", "Успех",
@@ -174,5 +174,6 @@ namespace UchPR
         {
             this.Close();
         }
+
     }
 }

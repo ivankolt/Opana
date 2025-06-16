@@ -1,86 +1,132 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace UchPR
 {
-    /// <summary>
-    /// Логика взаимодействия для LoginWindow.xaml
-    /// </summary>
     public partial class LoginWindow : Window
     {
-        private readonly DataBase db = new DataBase();
+        private readonly IAuthenticationService _authenticationService;
+        private readonly INavigationService _navigationService;
+        private readonly IMessageService _messageService;
+        private readonly IUserSessionService _userSessionService;
+
         public LoginWindow()
         {
             InitializeComponent();
+
+            // Создаем зависимости
+            _userSessionService = new UserSessionService();
+            _authenticationService = new AuthenticationService(new DataBase(), _userSessionService);
+            _navigationService = new NavigationService(this, _userSessionService);
+
+            // ИСПРАВЛЕНО: передаем lblError как TextBlock
+            _messageService = new MessageService(lblError);
+
+            // Загружаем сохраненные данные при открытии окна
+            LoadSavedCredentials();
         }
-        private void btnLogin_Click(object sender, RoutedEventArgs e)
+
+        private void LoadSavedCredentials()
         {
-            string login = txtLogin.Text;
+            try
+            {
+                if (_userSessionService.HasSavedCredentials())
+                {
+                    txtLogin.Text = _userSessionService.GetCurrentUserLogin();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки сохраненных данных: {ex.Message}");
+            }
+        }
+
+        private async void btnLogin_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await HandleLoginAsync();
+            }
+            catch (Exception ex)
+            {
+                _messageService.ShowError($"Произошла ошибка: {ex.Message}");
+            }
+        }
+
+        private async Task HandleLoginAsync()
+        {
+            string login = txtLogin.Text?.Trim();
             string password = txtPassword.Password;
 
             if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
             {
-                ShowError("Пожалуйста, введите логин и пароль.");
+                _messageService.ShowError("Пожалуйста, введите логин и пароль.");
                 return;
             }
 
-            // СТАЛО: Простой и понятный вызов метода
-            string userRole = db.AuthenticateUser(login, password);
+            SetLoadingState(true);
 
-            if (userRole != null)
+            try
             {
-                lblError.Visibility = Visibility.Collapsed;
-                RedirectToRoleWindow(userRole);
+                var result = await _authenticationService.AuthenticateAsync(login, password);
+
+                if (result.IsSuccess)
+                {
+                    _messageService.HideError();
+                    SaveCredentialsForSession(login, password, result.UserInfo);
+                    _navigationService.NavigateToMainWindow(result.UserInfo);
+                }
+                else
+                {
+                    _messageService.ShowError(result.ErrorMessage);
+                }
             }
-            else
+            finally
             {
-                ShowError("Неверный логин или пароль, либо ошибка подключения к БД.");
+                SetLoadingState(false);
             }
         }
-        private void RedirectToRoleWindow(string userRole)
+
+        private void SaveCredentialsForSession(string login, string password, UserInfo userInfo)
         {
-            // Здесь нам нужно получить и имя пользователя, не только роль
-            // Давайте немного изменим метод AuthenticateUser в классе DataBase
+            try
+            {
+                userInfo.Password = password;
+                _userSessionService.SaveCredentials(login, password);
+                _userSessionService.SetCurrentUser(userInfo);
 
-            // Получаем полное имя пользователя
-            string userName = db.GetUserName(txtLogin.Text); // Добавим этот метод в DataBase
+                System.Diagnostics.Debug.WriteLine($"Сохранены учетные данные для пользователя: {login}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка сохранения учетных данных: {ex.Message}");
+            }
+        }
 
-            // Создаем экземпляр главного окна и передаем ему роль и имя
-            var mainWindow = new MainWindow(userRole, userName);
-            mainWindow.Show();
-
-            // Закрываем окно авторизации
-            this.Close();
+        private void SetLoadingState(bool isLoading)
+        {
+            btnLogin.IsEnabled = !isLoading;
+            btnLogin.Content = isLoading ? "Вход..." : "Войти";
+            txtLogin.IsEnabled = !isLoading;
+            txtPassword.IsEnabled = !isLoading;
         }
 
         private void Register_Click(object sender, RoutedEventArgs e)
         {
-            RegistrationWindow registrationWindow = new RegistrationWindow();
-            registrationWindow.Show();
-            this.Close();
+            try
+            {
+                _navigationService.NavigateToRegistration();
+            }
+            catch (Exception ex)
+            {
+                _messageService.ShowError($"Ошибка при переходе к регистрации: {ex.Message}");
+            }
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            _navigationService.CloseApplication();
         }
-
-        private void ShowError(string message)
-        {
-            lblError.Text = message;
-            lblError.Visibility = Visibility.Visible;
-        }
-
     }
 }
