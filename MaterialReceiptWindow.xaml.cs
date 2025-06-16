@@ -117,26 +117,62 @@ namespace UchPR
 
         private void DgMaterials_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
         {
+            if (e.EditAction == DataGridEditAction.Cancel) return;
+
+            var line = e.Row.Item as MaterialReceiptLine;
+            if (line == null) return;
+
+            // Обработка изменения типа материала
             if (e.Column.Header.ToString() == "Тип материала")
             {
-                Dispatcher.BeginInvoke(new Action(() =>
+                var comboBox = e.EditingElement as ComboBox;
+                if (comboBox?.SelectedValue != null)
                 {
-                    var comboBox = e.EditingElement as ComboBox;
-                    if (comboBox?.SelectedValue != null)
-                    {
-                        var materialType = comboBox.SelectedValue.ToString();
-                        UpdateMaterialsList(materialType);
+                    string materialType = comboBox.SelectedValue.ToString();
 
-                        var line = e.Row.Item as MaterialReceiptLine;
-                        if (line != null)
-                        {
-                            line.MaterialArticle = null;
-                        }
-                    }
-                }));
+                    // Сбрасываем выбранный материал при смене типа
+                    line.MaterialArticle = null;
+
+                    // Обновляем список материалов с задержкой
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        UpdateMaterialsList(materialType);
+                    }), System.Windows.Threading.DispatcherPriority.Background);
+                }
+            }
+
+            // Проверяем заполненность строки и добавляем новую при необходимости
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                CheckAndAddNewLine();
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+        private void CheckAndAddNewLine()
+        {
+            // Проверяем, есть ли пустая строка в конце
+            var lastLine = receiptLines.LastOrDefault();
+            if (lastLine != null &&
+                !string.IsNullOrEmpty(lastLine.MaterialType) &&
+                !string.IsNullOrEmpty(lastLine.MaterialArticle))
+            {
+                // Если последняя строка заполнена, добавляем новую пустую
+                AddEmptyLine();
+            }
+
+            // Удаляем лишние пустые строки (оставляем только одну в конце)
+            var emptyLines = receiptLines.Where(line =>
+                string.IsNullOrEmpty(line.MaterialType) &&
+                string.IsNullOrEmpty(line.MaterialArticle) &&
+                line.Quantity == 0).ToList();
+
+            if (emptyLines.Count > 1)
+            {
+                for (int i = 0; i < emptyLines.Count - 1; i++)
+                {
+                    receiptLines.Remove(emptyLines[i]);
+                }
             }
         }
-
         private void UpdateMaterialsList(string materialType)
         {
             var materialNameColumn = dgMaterials.Columns[1] as DataGridComboBoxColumn;
@@ -376,9 +412,9 @@ namespace UchPR
             if (ValidateDocument())
             {
                 SaveDocument(false); // false = не принимать к учету
+                SaveToHistory("save", false); // Сохраняем в историю
             }
         }
-
         // ПРИНЯТИЕ К УЧЕТУ (С ОБНОВЛЕНИЕМ СКЛАДА)
         private void BtnAcceptDocument_Click(object sender, RoutedEventArgs e)
         {
@@ -393,6 +429,7 @@ namespace UchPR
                 if (result == MessageBoxResult.Yes)
                 {
                     SaveDocument(true); // true = принять к учету
+                    SaveToHistory("accept", true); // Сохраняем в историю
                 }
             }
         }
@@ -592,6 +629,46 @@ namespace UchPR
                 cmd.Parameters.AddWithValue("@purchase_price", line.UnitPrice);
                 cmd.Parameters.AddWithValue("@total_cost", line.TotalSum);
                 cmd.ExecuteNonQuery();
+            }
+        }
+        private void SaveToHistory(string action, bool isAccepted)
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection(database.connectionString))
+                {
+                    connection.Open();
+
+                    string query = @"
+                INSERT INTO document_history 
+                (document_name, document_type, status, created_date, modified_date, 
+                 description, created_by, modified_by)
+                VALUES (@document_name, @document_type, @status, @created_date, 
+                        @modified_date, @description, @created_by, @modified_by)";
+
+                    using (var cmd = new NpgsqlCommand(query, connection))
+                    {
+                        string status = isAccepted ? "Принят к учету" : "Сохранен как черновик";
+                        string description = $"Документ поступления материалов {txtDocNumber.Text}. " +
+                                           $"Дата: {dpDate.SelectedDate:dd.MM.yyyy}. " +
+                                           $"Общая сумма: {txtTotalAmount.Text}";
+
+                        cmd.Parameters.AddWithValue("@document_name", $"Поступление {txtDocNumber.Text}");
+                        cmd.Parameters.AddWithValue("@document_type", "Поступление материалов");
+                        cmd.Parameters.AddWithValue("@status", status);
+                        cmd.Parameters.AddWithValue("@created_date", DateTime.Now);
+                        cmd.Parameters.AddWithValue("@modified_date", DateTime.Now);
+                        cmd.Parameters.AddWithValue("@description", description);
+                        cmd.Parameters.AddWithValue("@created_by", currentUserRole);
+                        cmd.Parameters.AddWithValue("@modified_by", currentUserRole);
+
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка сохранения в историю: {ex.Message}");
             }
         }
 

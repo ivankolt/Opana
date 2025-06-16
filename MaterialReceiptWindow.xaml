@@ -74,19 +74,46 @@
 
         <!-- ======================= ТАБЛИЦА МАТЕРИАЛОВ ======================= -->
         <DataGrid x:Name="dgMaterials" Grid.Row="2" Margin="20"
-                  AutoGenerateColumns="False" CanUserAddRows="True"
-                  AlternatingRowBackground="{StaticResource AdditionalColor2}"
-                  GridLinesVisibility="All" HeadersVisibility="Column">
+          AutoGenerateColumns="False" CanUserAddRows="True"
+          AlternatingRowBackground="{StaticResource AdditionalColor2}"
+          GridLinesVisibility="All" HeadersVisibility="Column"
+          CellEditEnding="DgMaterials_CellEditEnding">
             <DataGrid.Columns>
-                <DataGridComboBoxColumn Header="Тип материала" Width="1.5*"/>
-                <DataGridComboBoxColumn Header="Наименование" Width="3*"/>
-                <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="1*"/>
-                <DataGridComboBoxColumn Header="Ед. изм." Width="1*"/>
-                <DataGridTextColumn Header="Цена за ед." Binding="{Binding UnitPrice, StringFormat=C}" Width="1.5*"/>
-                <DataGridTextColumn Header="Сумма" Binding="{Binding TotalSum, StringFormat=C}" 
-                                   IsReadOnly="True" Width="1.5*"/>
+                <!-- Тип материала -->
+                <DataGridComboBoxColumn Header="Тип материала" Width="1.5*"
+                               DisplayMemberPath="Name"
+                               SelectedValuePath="Type"
+                               SelectedValueBinding="{Binding MaterialType, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <!-- Наименование материала -->
+                <DataGridComboBoxColumn Header="Наименование" Width="3*"
+                               DisplayMemberPath="Name"
+                               SelectedValuePath="Id"
+                               SelectedValueBinding="{Binding MaterialArticle, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <!-- Количество -->
+                <DataGridTextColumn Header="Количество" 
+                           Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" 
+                           Width="1*"/>
+
+                <!-- Единица измерения -->
+                <DataGridComboBoxColumn Header="Ед. изм." Width="1*"
+                               DisplayMemberPath="Name"
+                               SelectedValuePath="Code"
+                               SelectedValueBinding="{Binding UnitCode, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <!-- Цена за единицу -->
+                <DataGridTextColumn Header="Цена за ед." 
+                           Binding="{Binding UnitPrice, StringFormat=C, UpdateSourceTrigger=PropertyChanged}" 
+                           Width="1.5*"/>
+
+                <!-- Сумма -->
+                <DataGridTextColumn Header="Сумма" 
+                           Binding="{Binding TotalSum, StringFormat=C}" 
+                           IsReadOnly="True" Width="1.5*"/>
             </DataGrid.Columns>
         </DataGrid>
+
 
         <!-- ======================= ИТОГИ И УПРАВЛЕНИЕ ======================= -->
         <Border Grid.Row="3" Background="{StaticResource PrimaryColor1}" Padding="20,15">

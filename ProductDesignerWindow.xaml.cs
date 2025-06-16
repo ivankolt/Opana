@@ -95,7 +95,7 @@ namespace UchPR
                     {
                         Id = row["article"].ToString(),
                         Name = row["name"].ToString(),
-                        ImagePath = GetImagePath("Ткани", row["article"].ToString()),
+                        ImagePath = GetImagePath("Fabric", row["article"].ToString()),
                         Type = "fabric"
                     });
                 }

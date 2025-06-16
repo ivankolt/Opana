@@ -1,8 +1,9 @@
 ﻿<Window x:Class="UchPR.DocumentHistoryWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="История документов" Height="600" Width="900"
+        Title="История документов поступления" Height="600" Width="1000"
         WindowStartupLocation="CenterScreen">
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -10,51 +11,59 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-  
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
-            <TextBlock Text="Фильтр по статусу:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <ComboBox Name="StatusFilterComboBox" Width="150" 
-                      SelectionChanged="StatusFilter_SelectionChanged">
-                <ComboBoxItem Content="Все документы" IsSelected="True"/>
-                <ComboBoxItem Content="Сохранённые"/>
-                <ComboBoxItem Content="Принятые"/>
-            </ComboBox>
+        <!-- Фильтры -->
+        <Border Grid.Row="0" Background="#B5D5CA" Padding="15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-            <TextBlock Text="Поиск:" VerticalAlignment="Center" Margin="20,0,10,0"/>
-            <TextBox Name="SearchTextBox" Width="200" 
-                     TextChanged="SearchTextBox_TextChanged"/>
-        </StackPanel>
+                <TextBlock Grid.Column="0" Text="Статус:" VerticalAlignment="Center" 
+                          FontWeight="SemiBold" Margin="0,0,10,0"/>
+                <ComboBox x:Name="StatusFilterComboBox" Grid.Column="1" 
+                         SelectionChanged="StatusFilter_SelectionChanged"/>
 
-      
-        <DataGrid Grid.Row="1" Name="DocumentsDataGrid" 
-                  AutoGenerateColumns="False" 
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  GridLinesVisibility="Horizontal"
-                  HeadersVisibility="Column"
-                  Margin="10">
+                <TextBlock Grid.Column="2" Text="Поиск:" VerticalAlignment="Center" 
+                          FontWeight="SemiBold" Margin="20,0,10,0"/>
+                <TextBox x:Name="SearchTextBox" Grid.Column="3" 
+                        TextChanged="SearchTextBox_TextChanged"
+                        Margin="0,0,20,0"/>
+            </Grid>
+        </Border>
+
+        <!-- Таблица документов -->
+        <DataGrid x:Name="DocumentsDataGrid" Grid.Row="1" 
+                 AutoGenerateColumns="False" IsReadOnly="True"
+                 AlternatingRowBackground="#FFFCD6">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="№" Binding="{Binding Id}" Width="50"/>
-                <DataGridTextColumn Header="Название документа" Binding="{Binding DocumentName}" Width="200"/>
-                <DataGridTextColumn Header="Тип" Binding="{Binding DocumentType}" Width="120"/>
-                <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="100"/>
-                <DataGridTextColumn Header="Дата создания" Binding="{Binding CreatedDate, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
-                <DataGridTextColumn Header="Дата изменения" Binding="{Binding ModifiedDate, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
-                <DataGridTextColumn Header="Размер" Binding="{Binding FileSize}" Width="80"/>
+                <DataGridTextColumn Header="Название" Binding="{Binding DocumentName}" Width="2*"/>
+                <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="1.5*"/>
+                <DataGridTextColumn Header="Дата создания" 
+                                   Binding="{Binding CreatedDate, StringFormat=dd.MM.yyyy HH:mm}" Width="1.5*"/>
+                <DataGridTextColumn Header="Создал" Binding="{Binding CreatedBy}" Width="1*"/>
+                <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="3*"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <!--<StackPanel Grid.Row="2" Orientation="Horizontal" 
-                    HorizontalAlignment="Right" Margin="10">
-            <Button Name="ViewButton" Content="Просмотреть" 
-                    Width="100" Height="30" Margin="5"
-                    Click="ViewButton_Click"/>
-            <Button Name="DeleteButton" Content="Удалить" 
-                    Width="100" Height="30" Margin="5"
-                    Click="DeleteButton_Click"/>
-            <Button Name="CloseButton" Content="Закрыть" 
-                    Width="100" Height="30" Margin="5"
-                    Click="CloseButton_Click"/>
-        </StackPanel>-->
+        <!-- Кнопки управления -->
+        <Border Grid.Row="2" Background="#B5D5CA" Padding="15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Просмотр" Click="ViewButton_Click" 
+                       Background="#E0A9AF" Foreground="White" 
+                       Padding="15,5" Margin="5"/>
+                <Button Content="Принять к учету" Click="AcceptDraftButton_Click" 
+                       Background="#4CAF50" Foreground="White" 
+                       Padding="15,5" Margin="5"/>
+                <Button Content="Удалить" Click="DeleteButton_Click" 
+                       Background="#F44336" Foreground="White" 
+                       Padding="15,5" Margin="5"/>
+                <Button Content="Закрыть" Click="CloseButton_Click" 
+                       Background="Gray" Foreground="White" 
+                       Padding="15,5" Margin="5"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

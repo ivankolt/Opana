@@ -1,51 +1,131 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using Npgsql;
 
 namespace UchPR
 {
     public partial class DocumentHistoryWindow : Window
     {
-        //  private DocumentHistoryRepository _repository;
+        private DataBase database;
         private ObservableCollection<DocumentHistoryItem> _documents;
+        private ObservableCollection<DocumentHistoryItem> _allDocuments;
 
         public DocumentHistoryWindow()
         {
             InitializeComponent();
-            InitializeRepository();
+            database = new DataBase();
+            InitializeData();
         }
 
-        private void InitializeRepository()
+        private void InitializeData()
         {
             try
             {
-                // Используйте вашу строку подключения к базе данных
-                //    string connectionString = "Data Source=UchPR.db;Version=3;";
-                //   _repository = new DocumentHistoryRepository(connectionString);
                 LoadDocuments();
+                SetupFilters();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка инициализации базы данных: {ex.Message}", "Ошибка",
+                MessageBox.Show($"Ошибка инициализации: {ex.Message}", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void SetupFilters()
+        {
+            // Добавляем варианты фильтрации по статусу
+            StatusFilterComboBox.Items.Clear();
+            StatusFilterComboBox.Items.Add(new ComboBoxItem { Content = "Все документы" });
+            StatusFilterComboBox.Items.Add(new ComboBoxItem { Content = "Сохранен как черновик" });
+            StatusFilterComboBox.Items.Add(new ComboBoxItem { Content = "Принят к учету" });
+            StatusFilterComboBox.SelectedIndex = 0;
         }
 
         private void LoadDocuments()
         {
             try
             {
-               // var documents = _repository.GetAllDocuments();
-              //  _documents = new ObservableCollection<DocumentHistoryItem>(documents);
+                string query = @"
+                    SELECT id, document_name, document_type, status, created_date, 
+                           modified_date, file_path, file_size, description, 
+                           created_by, modified_by
+                    FROM document_history 
+                    WHERE document_type = 'Поступление материалов'
+                    ORDER BY created_date DESC";
+
+                var data = database.GetData(query);
+                var documents = new List<DocumentHistoryItem>();
+
+                foreach (DataRow row in data.Rows)
+                {
+                    var doc = new DocumentHistoryItem
+                    {
+                        Id = Convert.ToInt32(row["id"]),
+                        DocumentName = row["document_name"].ToString(),
+                        DocumentType = row["document_type"].ToString(),
+                        Status = row["status"].ToString(),
+                        CreatedDate = Convert.ToDateTime(row["created_date"]),
+                        ModifiedDate = Convert.ToDateTime(row["modified_date"]),
+                        FilePath = row["file_path"]?.ToString(),
+                        FileSize = row["file_size"] != DBNull.Value ? Convert.ToInt64(row["file_size"]) : 0,
+                        Description = row["description"]?.ToString(),
+                        CreatedBy = row["created_by"]?.ToString(),
+                        ModifiedBy = row["modified_by"]?.ToString()
+                    };
+
+                    documents.Add(doc);
+                }
+
+                _allDocuments = new ObservableCollection<DocumentHistoryItem>(documents);
+                _documents = new ObservableCollection<DocumentHistoryItem>(documents);
                 DocumentsDataGrid.ItemsSource = _documents;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка загрузки документов: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ApplyFilters()
+        {
+            if (_allDocuments == null) return;
+
+            try
+            {
+                var selectedStatus = ((ComboBoxItem)StatusFilterComboBox.SelectedItem)?.Content?.ToString();
+                var searchText = SearchTextBox?.Text?.ToLower() ?? "";
+
+                var filteredDocuments = _allDocuments.Where(doc =>
+                {
+                    // Фильтр по статусу
+                    bool statusMatch = selectedStatus == "Все документы" ||
+                                     doc.Status == selectedStatus;
+
+                    // Фильтр по тексту поиска
+                    bool textMatch = string.IsNullOrEmpty(searchText) ||
+                                   doc.DocumentName.ToLower().Contains(searchText) ||
+                                   doc.Description?.ToLower().Contains(searchText) == true;
+
+                    return statusMatch && textMatch;
+                });
+
+                _documents.Clear();
+                foreach (var doc in filteredDocuments)
+                {
+                    _documents.Add(doc);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка фильтрации: {ex.Message}", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -60,32 +140,6 @@ namespace UchPR
             ApplyFilters();
         }
 
-        private void ApplyFilters()
-        {
-         //   if (_repository == null) return;
-
-            try
-            {
-                var selectedStatus = ((ComboBoxItem)StatusFilterComboBox.SelectedItem)?.Content?.ToString();
-                var searchText = SearchTextBox?.Text;
-
-                string statusFilter = (selectedStatus == "Все документы") ? null : selectedStatus;
-
-             //   var filteredDocuments = _repository.SearchDocuments(searchText, statusFilter);
-                _documents.Clear();
-
-               // foreach (var doc in filteredDocuments)
-                {
-               //     _documents.Add(doc);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка фильтрации: {ex.Message}", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
         private void ViewButton_Click(object sender, RoutedEventArgs e)
         {
             var selectedDocument = DocumentsDataGrid.SelectedItem as DocumentHistoryItem;
@@ -98,41 +152,94 @@ namespace UchPR
 
             try
             {
-                if (!string.IsNullOrEmpty(selectedDocument.FilePath) && File.Exists(selectedDocument.FilePath))
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = selectedDocument.FilePath,
-                        UseShellExecute = true
-                    });
-                }
-                else
-                {
-                    // Если файл не найден, попробуем открыть из базы данных
-                 //   var documentData = _repository.GetDocumentData(selectedDocument.Id);
-                  //  if (documentData != null && documentData.Length > 0)
-                    {
-                        // Создаем временный файл и открываем его
-                        string tempPath = Path.GetTempFileName();
-                  //      File.WriteAllBytes(tempPath, documentData);
-
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = tempPath,
-                            UseShellExecute = true
-                        });
-                    }
-               //     else
-                    {
-                        MessageBox.Show("Документ не найден.", "Ошибка",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
+                // Открываем окно с деталями документа
+     
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при открытии документа: {ex.Message}", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void AcceptDraftButton_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedDocument = DocumentsDataGrid.SelectedItem as DocumentHistoryItem;
+            if (selectedDocument == null)
+            {
+                MessageBox.Show("Выберите документ.", "Внимание",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (selectedDocument.Status != "Сохранен как черновик")
+            {
+                MessageBox.Show("Можно принять к учету только черновики.", "Внимание",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Принять документ '{selectedDocument.DocumentName}' к учету?",
+                "Подтверждение",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    AcceptDocumentToAccounting(selectedDocument);
+                    LoadDocuments(); // Перезагружаем список
+                    MessageBox.Show("Документ принят к учету.", "Успех",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void AcceptDocumentToAccounting(DocumentHistoryItem document)
+        {
+            // Здесь нужно реализовать логику принятия к учету:
+            // 1. Обновить статус документа в истории
+            // 2. Применить изменения к складским остаткам
+            // 3. Обновить соответствующий документ поступления
+
+            using (var connection = new NpgsqlConnection(database.connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Обновляем статус в истории
+                        string updateHistoryQuery = @"
+                            UPDATE document_history 
+                            SET status = 'Принят к учету', modified_date = @modified_date
+                            WHERE id = @id";
+
+                        using (var cmd = new NpgsqlCommand(updateHistoryQuery, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@modified_date", DateTime.Now);
+                            cmd.Parameters.AddWithValue("@id", document.Id);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // Здесь добавить логику обновления складских остатков
+                        // если это необходимо
+
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
             }
         }
 
@@ -147,7 +254,7 @@ namespace UchPR
             }
 
             var result = MessageBox.Show(
-                $"Вы уверены, что хотите удалить документ '{selectedDocument.DocumentName}'?",
+                $"Удалить документ '{selectedDocument.DocumentName}' из истории?",
                 "Подтверждение удаления",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -156,15 +263,27 @@ namespace UchPR
             {
                 try
                 {
-                    //_repository.DeleteDocument(selectedDocument.Id);
-                    _documents.Remove(selectedDocument);
+                    string deleteQuery = "DELETE FROM document_history WHERE id = @id";
 
-                    MessageBox.Show("Документ успешно удалён.", "Успех",
+                    using (var connection = new NpgsqlConnection(database.connectionString))
+                    {
+                        connection.Open();
+                        using (var cmd = new NpgsqlCommand(deleteQuery, connection))
+                        {
+                            cmd.Parameters.AddWithValue("@id", selectedDocument.Id);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    _documents.Remove(selectedDocument);
+                    _allDocuments.Remove(selectedDocument);
+
+                    MessageBox.Show("Документ удален из истории.", "Успех",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Ошибка при удалении документа: {ex.Message}", "Ошибка",
+                    MessageBox.Show($"Ошибка при удалении: {ex.Message}", "Ошибка",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -174,6 +293,5 @@ namespace UchPR
         {
             this.Close();
         }
-
     }
 }
