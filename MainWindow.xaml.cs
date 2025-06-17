@@ -69,6 +69,7 @@ namespace UchPR
             btnFabricList.Visibility = Visibility.Visible;
             btnAccessoryList.Visibility = Visibility.Visible;
             btnMaterialReceipt.Visibility = Visibility.Visible; // Показываем только кладовщику
+            btnInventar.Visibility = Visibility.Visible;
         }
 
         private void ConfigureManagerNavigation()
@@ -142,7 +143,19 @@ namespace UchPR
             receiptWindow.Owner = this;
             receiptWindow.ShowDialog();
         }
-
+        private void BtnInventar_Click(object sender, RoutedEventArgs e)
+        {
+            // Только для кладовщика!
+            if (currentUserRole != "Кладовщик")
+            {
+                MessageBox.Show("Доступ разрешен только кладовщику.");
+                return;
+            }
+            var receiptWindow = new InventoryWindow(currentUserRole);
+            receiptWindow.Owner = this;
+            receiptWindow.ShowDialog();
+        }
+        
         private void SetInitialPage()
         {
             Page initialPage = null;

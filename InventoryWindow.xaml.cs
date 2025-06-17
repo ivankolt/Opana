@@ -68,12 +68,12 @@ namespace UchPR
         {
             try
             {
-                // Загрузка тканей
+                // Загрузка тканей - ИСПРАВЛЕНО: отображаем артикул
                 string fabricQuery = @"
-                SELECT f.article, fn.name 
-                FROM fabric f
-                LEFT JOIN fabricname fn ON f.name_id = fn.code
-                ORDER BY fn.name";
+        SELECT f.article, fn.name 
+        FROM fabric f
+        LEFT JOIN fabricname fn ON f.name_id = fn.code
+        ORDER BY f.article";
 
                 var fabricData = database.GetData(fabricQuery);
                 var fabrics = new List<MaterialItem>();
@@ -83,19 +83,21 @@ namespace UchPR
                     fabrics.Add(new MaterialItem
                     {
                         Id = row["article"].ToString(),
-                        Name = row["name"].ToString(),
+                        Name = $"Арт. {row["article"]} - {row["name"]}", // Показываем артикул + название
                         Type = "fabric"
                     });
                 }
 
                 cbFabricSelect.ItemsSource = fabrics;
+                cbFabricSelect.DisplayMemberPath = "Name"; // Отображаем полную строку с артикулом
+                cbFabricSelect.SelectedValuePath = "Id";
 
-                // Загрузка фурнитуры
+                // Загрузка фурнитуры - ИСПРАВЛЕНО: отображаем артикул
                 string accessoryQuery = @"
-                SELECT a.article, fan.name 
-                FROM accessory a
-                LEFT JOIN furnitureaccessoryname fan ON a.name_id = fan.id
-                ORDER BY fan.name";
+        SELECT a.article, fan.name 
+        FROM accessory a
+        LEFT JOIN furnitureaccessoryname fan ON a.name_id = fan.id
+        ORDER BY a.article";
 
                 var accessoryData = database.GetData(accessoryQuery);
                 var accessories = new List<MaterialItem>();
@@ -105,19 +107,21 @@ namespace UchPR
                     accessories.Add(new MaterialItem
                     {
                         Id = row["article"].ToString(),
-                        Name = row["name"].ToString(),
+                        Name = $"Арт. {row["article"]} - {row["name"]}", // Показываем артикул + название
                         Type = "accessory"
                     });
                 }
 
                 cbAccessorySelect.ItemsSource = accessories;
+                cbAccessorySelect.DisplayMemberPath = "Name"; // Отображаем полную строку с артикулом
+                cbAccessorySelect.SelectedValuePath = "Id";
 
-                // Загрузка изделий
+                // Загрузка изделий - ИСПРАВЛЕНО: отображаем артикул
                 string productQuery = @"
-                SELECT p.article, pn.name 
-                FROM product p
-                LEFT JOIN productname pn ON p.name_id = pn.id
-                ORDER BY pn.name";
+        SELECT p.article, pn.name 
+        FROM product p
+        LEFT JOIN productname pn ON p.name_id = pn.id
+        ORDER BY p.article";
 
                 var productData = database.GetData(productQuery);
                 var products = new List<MaterialItem>();
@@ -127,18 +131,21 @@ namespace UchPR
                     products.Add(new MaterialItem
                     {
                         Id = row["article"].ToString(),
-                        Name = row["name"].ToString(),
+                        Name = $"Арт. {row["article"]} - {row["name"]}", // Показываем артикул + название
                         Type = "product"
                     });
                 }
 
                 cbProductSelect.ItemsSource = products;
+                cbProductSelect.DisplayMemberPath = "Name"; // Отображаем полную строку с артикулом
+                cbProductSelect.SelectedValuePath = "Id";
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка загрузки материалов: {ex.Message}");
             }
         }
+
 
         #region Обработчики событий для placeholder текста
 
@@ -379,11 +386,11 @@ namespace UchPR
             foreach (var fabricLine in fabricLines)
             {
                 string fabricQuery = @"
-                SELECT 
-                    COALESCE(SUM(width * length), 0) as total_quantity,
-                    COALESCE(AVG(purchase_price), 0) as avg_price
-                FROM fabricwarehouse 
-                WHERE fabric_article = @fabric_article";
+        SELECT 
+            COALESCE(SUM(width * length), 0) as total_quantity,
+            COALESCE(AVG(purchase_price), 0) as avg_price
+        FROM fabricwarehouse 
+        WHERE fabric_article = @fabric_article";
 
                 using (var connection = new NpgsqlConnection(database.connectionString))
                 {
@@ -395,8 +402,9 @@ namespace UchPR
                         {
                             if (reader.Read())
                             {
-                                fabricLine.SystemQuantity = reader.GetDecimal("total_quantity");
-                                fabricLine.AveragePurchasePrice = reader.GetDecimal("avg_price");
+                                // ИСПРАВЛЕНО: Безопасное чтение
+                                fabricLine.SystemQuantity = SafeDataReader.GetSafeDecimal(reader, "total_quantity");
+                                fabricLine.AveragePurchasePrice = SafeDataReader.GetSafeDecimal(reader, "avg_price");
                             }
                         }
                     }
@@ -407,11 +415,11 @@ namespace UchPR
             foreach (var accessoryLine in accessoryLines)
             {
                 string accessoryQuery = @"
-                SELECT 
-                    COALESCE(SUM(quantity), 0) as total_quantity,
-                    COALESCE(AVG(purchase_price), 0) as avg_price
-                FROM accessorywarehouse 
-                WHERE accessory_article = @accessory_article";
+        SELECT 
+            COALESCE(SUM(quantity), 0) as total_quantity,
+            COALESCE(AVG(purchase_price), 0) as avg_price
+        FROM accessorywarehouse 
+        WHERE accessory_article = @accessory_article";
 
                 using (var connection = new NpgsqlConnection(database.connectionString))
                 {
@@ -423,8 +431,9 @@ namespace UchPR
                         {
                             if (reader.Read())
                             {
-                                accessoryLine.SystemQuantity = reader.GetInt32("total_quantity");
-                                accessoryLine.AveragePurchasePrice = reader.GetDecimal("avg_price");
+                                // ИСПРАВЛЕНО: Безопасное чтение
+                                accessoryLine.SystemQuantity = SafeDataReader.GetSafeInt32(reader, "total_quantity");
+                                accessoryLine.AveragePurchasePrice = SafeDataReader.GetSafeDecimal(reader, "avg_price");
                             }
                         }
                     }
@@ -435,11 +444,11 @@ namespace UchPR
             foreach (var productLine in productLines)
             {
                 string productQuery = @"
-                SELECT 
-                    COALESCE(SUM(quantity), 0) as total_quantity,
-                    COALESCE(AVG(production_cost), 0) as avg_cost
-                FROM productwarehouse 
-                WHERE product_article = @product_article";
+        SELECT 
+            COALESCE(SUM(quantity), 0) as total_quantity,
+            COALESCE(AVG(production_cost), 0) as avg_cost
+        FROM productwarehouse 
+        WHERE product_article = @product_article";
 
                 using (var connection = new NpgsqlConnection(database.connectionString))
                 {
@@ -451,14 +460,16 @@ namespace UchPR
                         {
                             if (reader.Read())
                             {
-                                productLine.SystemQuantity = reader.GetInt32("total_quantity");
-                                productLine.AverageProductionCost = reader.GetDecimal("avg_cost");
+                                // ИСПРАВЛЕНО: Безопасное чтение
+                                productLine.SystemQuantity = SafeDataReader.GetSafeInt32(reader, "total_quantity");
+                                productLine.AverageProductionCost = SafeDataReader.GetSafeDecimal(reader, "avg_cost");
                             }
                         }
                     }
                 }
             }
         }
+
 
         private void CalculateTotalDiscrepancy()
         {
@@ -791,13 +802,14 @@ namespace UchPR
                             {
                                 warehouseRecords.Add(new
                                 {
-                                    Roll = reader.GetInt32("roll"),
-                                    FabricArticle = reader.GetInt32("fabric_article"),
-                                    Width = reader.GetDecimal("width"),
-                                    Length = reader.GetDecimal("length"),
-                                    PurchasePrice = reader.GetDecimal("purchase_price"),
-                                    TotalCost = reader.GetDecimal("total_cost")
+                                    Roll = SafeDataReader.GetSafeInt32(reader, "roll"),
+                                    FabricArticle = SafeDataReader.GetSafeInt32(reader, "fabric_article"),
+                                    Width = SafeDataReader.GetSafeDecimal(reader, "width"),
+                                    Length = SafeDataReader.GetSafeDecimal(reader, "length"),
+                                    PurchasePrice = SafeDataReader.GetSafeDecimal(reader, "purchase_price"),
+                                    TotalCost = SafeDataReader.GetSafeDecimal(reader, "total_cost")
                                 });
+
                             }
                         }
                     }
@@ -889,12 +901,13 @@ namespace UchPR
                             {
                                 warehouseRecords.Add(new
                                 {
-                                    BatchNumber = reader.GetInt32("batch_number"),
-                                    AccessoryArticle = reader.GetString("accessory_article"),
-                                    Quantity = reader.GetInt32("quantity"),
-                                    PurchasePrice = reader.GetDecimal("purchase_price"),
-                                    TotalCost = reader.GetDecimal("total_cost")
+                                    BatchNumber = SafeDataReader.GetSafeInt32(reader, "batch_number"),
+                                    AccessoryArticle = SafeDataReader.GetSafeString(reader, "accessory_article"),
+                                    Quantity = SafeDataReader.GetSafeInt32(reader, "quantity"),
+                                    PurchasePrice = SafeDataReader.GetSafeDecimal(reader, "purchase_price"),
+                                    TotalCost = SafeDataReader.GetSafeDecimal(reader, "total_cost")
                                 });
+
                             }
                         }
                     }
@@ -983,12 +996,11 @@ namespace UchPR
                             {
                                 warehouseRecords.Add(new
                                 {
-                                    // ИСПРАВЛЕНО: Проверяем тип поля перед чтением
-                                    BatchId = reader.IsDBNull("batch_id") ? 0 : Convert.ToInt32(reader["batch_id"]),
-                                    ProductArticle = reader.IsDBNull("product_article") ? "" : reader["product_article"].ToString(),
-                                    Quantity = reader.IsDBNull("quantity") ? 0 : Convert.ToInt32(reader["quantity"]),
-                                    ProductionCost = reader.IsDBNull("production_cost") ? 0m : Convert.ToDecimal(reader["production_cost"]),
-                                    TotalCost = reader.IsDBNull("total_cost") ? 0m : Convert.ToDecimal(reader["total_cost"])
+                                    BatchId = SafeDataReader.GetSafeInt32(reader, "batch_id"),
+                                    ProductArticle = SafeDataReader.GetSafeString(reader, "product_article"),
+                                    Quantity = SafeDataReader.GetSafeInt32(reader, "quantity"),
+                                    ProductionCost = SafeDataReader.GetSafeDecimal(reader, "production_cost"),
+                                    TotalCost = SafeDataReader.GetSafeDecimal(reader, "total_cost")
                                 });
                             }
                         }
@@ -1337,6 +1349,114 @@ namespace UchPR
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
+    public static class SafeDataReader
+    {
+        public static int GetSafeInt32(NpgsqlDataReader reader, string columnName)
+        {
+            try
+            {
+                // Получаем индекс колонки по имени
+                int ordinal = reader.GetOrdinal(columnName);
+
+                if (reader.IsDBNull(ordinal))
+                    return 0;
+
+                var value = reader[columnName];
+
+                // Прямое приведение если тип совпадает
+                if (value is int intValue)
+                    return intValue;
+
+                // Попытка преобразования через Convert
+                try
+                {
+                    return Convert.ToInt32(value);
+                }
+                catch
+                {
+                    // Попытка парсинга строки
+                    if (int.TryParse(value.ToString(), out int parsedValue))
+                        return parsedValue;
+
+                    return 0;
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+                // Колонка не найдена
+                return 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        public static decimal GetSafeDecimal(NpgsqlDataReader reader, string columnName)
+        {
+            try
+            {
+                // Получаем индекс колонки по имени
+                int ordinal = reader.GetOrdinal(columnName);
+
+                if (reader.IsDBNull(ordinal))
+                    return 0m;
+
+                var value = reader[columnName];
+
+                if (value is decimal decimalValue)
+                    return decimalValue;
+
+                if (value is double doubleValue)
+                    return (decimal)doubleValue;
+
+                try
+                {
+                    return Convert.ToDecimal(value);
+                }
+                catch
+                {
+                    if (decimal.TryParse(value.ToString(), out decimal parsedValue))
+                        return parsedValue;
+
+                    return 0m;
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+                // Колонка не найдена
+                return 0m;
+            }
+            catch
+            {
+                return 0m;
+            }
+        }
+
+        public static string GetSafeString(NpgsqlDataReader reader, string columnName)
+        {
+            try
+            {
+                // Получаем индекс колонки по имени
+                int ordinal = reader.GetOrdinal(columnName);
+
+                if (reader.IsDBNull(ordinal))
+                    return string.Empty;
+
+                return reader[columnName]?.ToString() ?? string.Empty;
+            }
+            catch (IndexOutOfRangeException)
+            {
+                // Колонка не найдена
+                return string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+    }
+
 
     #endregion
 }
