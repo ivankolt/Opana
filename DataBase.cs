@@ -860,32 +860,51 @@
             public List<ProductCompositionItem> GetProductComposition(string productArticle)
             {
                 var composition = new List<ProductCompositionItem>();
-                // Сложный запрос, который объединяет данные из двух таблиц:
-                // тканевый состав и фурнитурный состав.
-                var sql = @"
-            -- Получаем ткани
-            SELECT 'Ткань' AS MaterialType, fn.name, fp.quantity, uom.name AS UnitName
-            FROM FabricProducts fp
-            JOIN Fabric f ON fp.fabric_article = f.article
-            JOIN FabricName fn ON f.name_id = fn.code
-            JOIN UnitOfMeasurement uom ON f.unit_of_measurement_id = uom.code
-            WHERE fp.product_article = @article
-        
-            UNION ALL
-        
-            -- Получаем фурнитуру
-            SELECT 'Фурнитура' AS MaterialType, fan.name, ap.quantity, uom.name AS UnitName
-            FROM AccessoryProducts ap
-            JOIN Accessory a ON ap.accessory_article = a.article
-            JOIN FurnitureAccessoryName fan ON a.name_id = fan.id
-            JOIN UnitOfMeasurement uom ON ap.unit_of_measurement_id = uom.code
-            WHERE ap.product_article = @article;
-        ";
+            // Сложный запрос, который объединяет данные из двух таблиц:
+            // тканевый состав и фурнитурный состав.
+            var sql = @"
+   SELECT 'Ткань' AS type, 
+       CAST(f.article AS varchar) AS article, 
+       fn.name AS name, 
+       u.name AS unit, 
+       SUM(fw.length * fw.width) AS quantity, 
+       SUM(fw.total_cost) AS total_cost
+FROM fabricwarehouse fw
+JOIN fabric f ON fw.fabric_article = f.article
+JOIN fabricname fn ON f.name_id = fn.code
+JOIN unitofmeasurement u ON f.unit_of_measurement_id = u.code
+GROUP BY f.article, fn.name, u.name
 
-                // ... здесь код выполнения запроса с параметром @article,
-                // который заполняет список `composition` ...
+UNION ALL
 
-                return composition;
+SELECT 'Фурнитура', 
+       a.article,  -- уже varchar, но можно добавить CAST для единообразия
+       fan.name, 
+       u.name, 
+       SUM(aw.quantity), 
+       SUM(aw.total_cost)
+FROM accessorywarehouse aw
+JOIN accessory a ON aw.accessory_article = a.article
+JOIN furnitureaccessoryname fan ON a.name_id = fan.id
+JOIN unitofmeasurement u ON a.unit_of_measurement_id = u.code
+GROUP BY a.article, fan.name, u.name
+
+UNION ALL
+
+SELECT 'Изделие', 
+       p.article,  -- уже varchar
+       pn.name, 
+       u.name, 
+       SUM(pw.quantity), 
+       SUM(pw.total_cost)
+FROM productwarehouse pw
+JOIN product p ON pw.product_article = p.article
+JOIN productname pn ON p.name_id = pn.id
+JOIN unitofmeasurement u ON p.unit_of_measurement_id = u.code
+GROUP BY p.article, pn.name, u.name
+ORDER BY type, name";
+
+            return composition;
             }
 
 

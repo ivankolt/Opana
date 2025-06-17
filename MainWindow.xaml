@@ -60,6 +60,8 @@
                         Width="160" Height="35" Margin="5" Click="BtnProductDesigner_Click"
                         Background="#FFFCD6" FontWeight="Bold" Foreground="#B5D5CA"/>
 
+               
+
                 <Button x:Name="btnInventar" Content="Инвентарь" 
          Width="160" Height="35" Margin="5" Click="BtnInventar_Click"
          Background="#FFFFFF" FontWeight="Bold" Foreground="#000000"/>

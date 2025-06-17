@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using Microsoft.Win32;
 using Npgsql;
 using System.IO;
+using System.Xml.Linq;
 
 namespace UchPR
 {
@@ -557,6 +558,149 @@ namespace UchPR
                 MessageBox.Show($"Ошибка добавления фурнитуры: {ex.Message}");
             }
         }
+        private int GetOrCreateProductNameId(string name, NpgsqlConnection connection, NpgsqlTransaction transaction)
+        {
+            string selectSql = "SELECT id FROM productname WHERE name = @name";
+            using (var selectCmd = new NpgsqlCommand(selectSql, connection, transaction))
+            {
+                selectCmd.Parameters.AddWithValue("@name", name);
+                var result = selectCmd.ExecuteScalar();
+                if (result != null)
+                    return Convert.ToInt32(result);
+            }
+
+            string insertSql = "INSERT INTO productname (name) VALUES (@name) RETURNING id";
+            using (var insertCmd = new NpgsqlCommand(insertSql, connection, transaction))
+            {
+                insertCmd.Parameters.AddWithValue("@name", name);
+                return Convert.ToInt32(insertCmd.ExecuteScalar());
+            }
+        }
+        private void CreateProduct()
+        {
+            using (var connection = new NpgsqlConnection(database.connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Генерация артикула
+                        string generatedArticle = GenerateProductArticle();
+
+                        // 2. Получение параметров изделия
+                     
+
+                        int selectedFabricArticle = 0;
+                        if (cbFabric.SelectedItem is MaterialItem fabric)
+                            int.TryParse(fabric.Id, out selectedFabricArticle);
+
+                        string imagePath = ""; // или путь к изображению, если есть
+                        string comment = ""; // или tbComment.Text, если поле есть
+                        decimal width = decimal.TryParse(tbWidth.Text, out var w) ? w : 0;
+                        decimal length = decimal.TryParse(tbHeight.Text, out var l) ? l : 0;
+
+                        // 3. Список аксессуаров
+                        var accessoriesList = designAccessories.ToList();
+
+                        // 4. Расчет цены
+                        decimal price = CalculateProductPrice(
+                            selectedFabricArticle,
+                            width,
+                            length,
+                            accessoriesList
+                        );
+                        string productName = txtDesignName.Text;
+                        int selectedNameId = GetOrCreateProductNameId(productName, connection, transaction);
+                        // 5. Вставка изделия
+                        string sqlProduct = @"
+                    INSERT INTO product 
+                    (article, name_id, width, length, image, comment, unit_of_measurement_id, price)
+                    VALUES (@article, @name_id, @width, @length, @image, @comment, @unit, @price)";
+                        using (var cmd = new NpgsqlCommand(sqlProduct, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@article", generatedArticle);
+                            cmd.Parameters.AddWithValue("@name_id", selectedNameId);
+                            cmd.Parameters.AddWithValue("@width", width);
+                            cmd.Parameters.AddWithValue("@length", length);
+                            cmd.Parameters.AddWithValue("@image", (object)imagePath ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@comment", comment ?? "");
+                            cmd.Parameters.AddWithValue("@unit", 1); // штуки
+                            cmd.Parameters.AddWithValue("@price", price);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 6. Вставка связи с тканью
+                        string sqlFabric = @"
+                    INSERT INTO fabricproducts (fabric_article, product_article)
+                    VALUES (@fabric_article, @product_article)";
+                        using (var cmd = new NpgsqlCommand(sqlFabric, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@fabric_article", selectedFabricArticle);
+                            cmd.Parameters.AddWithValue("@product_article", generatedArticle);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 7. Вставка аксессуаров
+                        string sqlAccessory = @"
+                    INSERT INTO accessoryproducts
+                    (accessory_article, product_article, placement, width, length, rotation, quantity, unit_of_measurement_id)
+                    VALUES (@accessory_article, @product_article, @placement, @width, @length, @rotation, @quantity, @unit)";
+                        foreach (var acc in accessoriesList)
+                        {
+                            using (var cmd = new NpgsqlCommand(sqlAccessory, connection, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@accessory_article", acc.AccessoryArticle);
+                                cmd.Parameters.AddWithValue("@product_article", generatedArticle);
+                                cmd.Parameters.AddWithValue("@placement", $"X:{acc.X:F0}, Y:{acc.Y:F0}");
+                                cmd.Parameters.AddWithValue("@width", acc.Width);
+                                cmd.Parameters.AddWithValue("@length", acc.Height);
+                                cmd.Parameters.AddWithValue("@rotation", acc.Rotation);
+                                cmd.Parameters.AddWithValue("@quantity", acc.Quantity);
+                                cmd.Parameters.AddWithValue("@unit", acc.UnitOfMeasurementId);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        transaction.Commit();
+                        MessageBox.Show($"Изделие успешно создано!\nАртикул: {generatedArticle}\nЦена: {price:N2} руб.");
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        MessageBox.Show($"Ошибка создания изделия: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        // Вспомогательные методы:
+
+        private string GenerateProductArticle()
+        {
+            var random = new Random();
+            string article;
+            do
+            {
+                article = random.Next(1000, 999999999).ToString();
+            }
+            while (IsProductArticleExists(article));
+            return article;
+        }
+
+        private bool IsProductArticleExists(string article)
+        {
+            using (var connection = new NpgsqlConnection(database.connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT COUNT(*) FROM product WHERE article = @article";
+                using (var cmd = new NpgsqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@article", article);
+                    return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+                }
+            }
+        }
 
         // ======================= DRAG & DROP И ВЗАИМОДЕЙСТВИЕ С CANVAS =======================
 
@@ -955,6 +1099,7 @@ namespace UchPR
                 }
 
                 SaveDesign();
+                CreateProduct();
                 MessageBox.Show("Дизайн успешно сохранен!");
             }
             catch (Exception ex)
@@ -1018,6 +1163,8 @@ namespace UchPR
                 return (int)cmd.ExecuteScalar();
             }
         }
+       
+
 
         private void SaveDesignAccessories(NpgsqlConnection connection, NpgsqlTransaction transaction, int designId)
         {
@@ -1052,6 +1199,54 @@ namespace UchPR
                 }
             }
         }
+        private decimal GetFabricPrice(int fabricArticle)
+        {
+            using (var connection = new NpgsqlConnection(database.connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT price FROM fabric WHERE article = @article";
+                using (var cmd = new NpgsqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@article", fabricArticle);
+                    var result = cmd.ExecuteScalar();
+                    return result != null ? Convert.ToDecimal(result) : 0;
+                }
+            }
+        }
+
+        private decimal GetAccessoryPrice(string accessoryArticle)
+        {
+            using (var connection = new NpgsqlConnection(database.connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT price FROM accessory WHERE article = @article";
+                using (var cmd = new NpgsqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@article", accessoryArticle);
+                    var result = cmd.ExecuteScalar();
+                    return result != null ? Convert.ToDecimal(result) : 0;
+                }
+            }
+        }
+
+        private decimal CalculateProductPrice(int fabricArticle, decimal width, decimal length, List<DesignAccessoryItem> accessories)
+        {
+            // Получаем цену ткани из БД
+            decimal fabricPricePerUnit = GetFabricPrice(fabricArticle); // например, за 1 кв.м
+            decimal fabricArea = (width / 1000m) * (length / 1000m); // если размеры в мм, переводим в метры
+            decimal fabricCost = fabricPricePerUnit * fabricArea;
+
+            // Считаем стоимость всей фурнитуры
+            decimal accessoriesCost = 0;
+            foreach (var acc in accessories)
+            {
+                decimal accessoryPrice = GetAccessoryPrice(acc.Id); // цена за штуку/метр
+                accessoriesCost += accessoryPrice * acc.Quantity;
+            }
+
+            return Math.Round(fabricCost + accessoriesCost, 2);
+        }
+
 
         // ======================= УПРАВЛЕНИЕ ВИДОМ =======================
 
@@ -1110,6 +1305,8 @@ namespace UchPR
         public double Width { get; set; }
         public double Height { get; set; }
         public double Rotation { get; set; }
+        public int Quantity { get; set; } = 1;
+        public int UnitOfMeasurementId { get; set; } = 1; // по умолчанию 1 (штуки)
         public UIElement CanvasElement { get; set; }
 
         public string Position

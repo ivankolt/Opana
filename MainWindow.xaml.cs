@@ -60,6 +60,9 @@ namespace UchPR
             btnCatalog.Visibility = Visibility.Collapsed;
             btnMyOrders.Visibility = Visibility.Collapsed;
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
+            btnInventar2.Visibility = Visibility.Collapsed;
+            btnInventar.Visibility = Visibility.Collapsed;
+            btnReports.Visibility = Visibility.Collapsed;
 
         }
 
@@ -71,6 +74,7 @@ namespace UchPR
             btnMaterialReceipt.Visibility = Visibility.Visible; // Показываем только кладовщику
             btnInventar.Visibility = Visibility.Visible;
             btnInventar2.Visibility = Visibility.Collapsed;
+            btnReports.Visibility = Visibility.Collapsed;
         }
 
         private void ConfigureManagerNavigation()
@@ -83,6 +87,7 @@ namespace UchPR
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
             btnInventar2.Visibility = Visibility.Collapsed;
             btnInventar.Visibility = Visibility.Collapsed;
+            btnReports.Visibility = Visibility.Collapsed;
         }
 
         private void ConfigureDirectorNavigation()
@@ -96,6 +101,7 @@ namespace UchPR
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
             btnInventar2.Visibility = Visibility.Visible;
             btnInventar.Visibility = Visibility.Collapsed;
+            btnReports.Visibility = Visibility.Visible;
         }
 
         private void BtnProductDesigner_Click(object sender, RoutedEventArgs e)
@@ -239,10 +245,11 @@ namespace UchPR
 
         private void BtnReports_Click(object sender, RoutedEventArgs e)
         {
-            // var reportsPage = new ReportsPage(currentUserRole);
-            // MainFrame.Navigate(reportsPage);
+           var statistics = new InventoryReportsWindow();
+            statistics.Owner = this;
+            statistics.ShowDialog();
             // HighlightActiveButton(btnReports);
-            MessageBox.Show("Страница отчетов в разработке");
+            // MessageBox.Show("Страница отчетов в разработке");    
         }
 
         private void BtnCatalog_Click(object sender, RoutedEventArgs e)

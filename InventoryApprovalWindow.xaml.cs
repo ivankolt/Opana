@@ -30,7 +30,7 @@ namespace UchPR
                 SELECT document_id, document_number, inventory_date, responsible_person, status,
                        total_discrepancy_amount, discrepancy_percentage
                 FROM inventory_documents
-                WHERE status = 'Ожидает утверждения руководителя'
+                WHERE status = 'Черновик'
                 ORDER BY inventory_date DESC";
             var data = database.GetData(query);
             documents = new ObservableCollection<InventoryDocument>();
@@ -209,7 +209,7 @@ namespace UchPR
                 {
                     cmd.Parameters.AddWithValue("@approved", approved);
                     cmd.Parameters.AddWithValue("@date", DateTime.Now);
-                    cmd.Parameters.AddWithValue("@status", approved ? "Утверждено директором" : "Отклонено директором");
+                    cmd.Parameters.AddWithValue("@status", approved ? "Завершен" : "Отклонено");
                     cmd.Parameters.AddWithValue("@comment", comment ?? "");
                     cmd.Parameters.AddWithValue("@docId", docId);
                     cmd.ExecuteNonQuery();

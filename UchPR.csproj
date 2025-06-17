@@ -121,6 +121,9 @@
     <Compile Include="InventoryApprovalWindow.xaml.cs">
       <DependentUpon>InventoryApprovalWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="InventoryReportsWindow.xaml.cs">
+      <DependentUpon>InventoryReportsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="InventoryWindow.xaml.cs">
       <DependentUpon>InventoryWindow.xaml</DependentUpon>
     </Compile>
@@ -176,6 +179,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="InventoryApprovalWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="InventoryReportsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
