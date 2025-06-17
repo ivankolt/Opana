@@ -552,7 +552,7 @@ namespace UchPR
             {
                 if (currentDocument.RequiresDirectorApproval && !currentDocument.DirectorApproved)
                 {
-                    MessageBox.Show("Документ требует утверждения директора");
+                    MessageBox.Show("Документ требует утверждения директором");
                     return;
                 }
 

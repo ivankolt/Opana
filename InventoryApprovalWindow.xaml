@@ -1,0 +1,88 @@
+﻿<Window x:Class="UchPR.InventoryApprovalWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Утверждение инвентаризации директором"
+        Height="700" Width="1100"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Фильтры -->
+            <RowDefinition Height="*"/>
+            <!-- Таблица документов -->
+            <RowDefinition Height="Auto"/>
+            <!-- Детали и кнопки -->
+        </Grid.RowDefinitions>
+
+        <!-- Фильтры -->
+        <StackPanel Orientation="Horizontal" Margin="10" Grid.Row="0">
+            <TextBlock Text="Статус:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <ComboBox x:Name="cbStatusFilter" Width="200" Margin="0,0,15,0"/>
+            <TextBlock Text="Поиск:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBox x:Name="tbSearch" Width="300" Margin="0,0,15,0"/>
+            <Button Content="Обновить" Width="110" Click="BtnRefresh_Click"/>
+        </StackPanel>
+
+        <!-- Таблица документов -->
+        <DataGrid x:Name="dgDocuments" Grid.Row="1" Margin="10"
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  SelectionChanged="DgDocuments_SelectionChanged">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Номер" Binding="{Binding DocumentNumber}" Width="1*"/>
+                <DataGridTextColumn Header="Дата" Binding="{Binding InventoryDate, StringFormat=dd.MM.yyyy}" Width="1*"/>
+                <DataGridTextColumn Header="Ответственный" Binding="{Binding ResponsiblePerson}" Width="1.5*"/>
+                <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="1*"/>
+                <DataGridTextColumn Header="Сумма расхождений" Binding="{Binding TotalDiscrepancyAmount, StringFormat=C}" Width="1*"/>
+                <DataGridTextColumn Header="% расхождений" Binding="{Binding DiscrepancyPercentage, StringFormat=F1}" Width="1*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Детали и кнопки -->
+        <Border Grid.Row="2" Background="#F6F6F6" Padding="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="3*"/>
+                </Grid.ColumnDefinitions>
+                <!-- Детализация документа -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Детализация расхождений" FontWeight="Bold" FontSize="14"/>
+                    <TabControl x:Name="tabDetails" Margin="0,10,0,0" Height="180">
+                        <TabItem Header="Сводка">
+                            <DataGrid x:Name="dgSummary" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Категория" Binding="{Binding Category}"/>
+                                    <DataGridTextColumn Header="Кол-во" Binding="{Binding ItemCount}"/>
+                                    <DataGridTextColumn Header="Сумма расхождений" Binding="{Binding DiscrepancyAmount, StringFormat=C}"/>
+                                    <DataGridTextColumn Header="% от общей суммы" Binding="{Binding PercentageOfTotal, StringFormat=F1}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Крупные расхождения">
+                            <DataGrid x:Name="dgLargeDiscrepancies" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Артикул" Binding="{Binding Article}"/>
+                                    <DataGridTextColumn Header="Наименование" Binding="{Binding Name}"/>
+                                    <DataGridTextColumn Header="Категория" Binding="{Binding Category}"/>
+                                    <DataGridTextColumn Header="Разница" Binding="{Binding Difference}"/>
+                                    <DataGridTextColumn Header="Сумма" Binding="{Binding Amount, StringFormat=C}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                    </TabControl>
+                </StackPanel>
+                <!-- Комментарий и кнопки -->
+                <StackPanel Grid.Column="1" Margin="25,0,0,0">
+                    <TextBlock Text="Комментарий руководителя (обязательно для утверждения):" FontWeight="Bold"/>
+                    <TextBox x:Name="txtDirectorComment" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,5,0,5"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                        <Button x:Name="btnApprove" Content="✓ Утвердить" Width="130" Margin="5"
+                                Background="Green" Foreground="White" Click="BtnApprove_Click"/>
+                        <Button x:Name="btnReject" Content="✗ Отклонить" Width="130" Margin="5"
+                                Background="Red" Foreground="White" Click="BtnReject_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

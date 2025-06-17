@@ -70,6 +70,7 @@ namespace UchPR
             btnAccessoryList.Visibility = Visibility.Visible;
             btnMaterialReceipt.Visibility = Visibility.Visible; // Показываем только кладовщику
             btnInventar.Visibility = Visibility.Visible;
+            btnInventar2.Visibility = Visibility.Collapsed;
         }
 
         private void ConfigureManagerNavigation()
@@ -80,6 +81,8 @@ namespace UchPR
             btnOrders.Visibility = Visibility.Visible;
             btnWarehouse.Visibility = Visibility.Visible; // Доступ к складу только для просмотра
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
+            btnInventar2.Visibility = Visibility.Collapsed;
+            btnInventar.Visibility = Visibility.Collapsed;
         }
 
         private void ConfigureDirectorNavigation()
@@ -91,6 +94,8 @@ namespace UchPR
             btnOrders.Visibility = Visibility.Visible;
             btnReports.Visibility = Visibility.Visible;
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
+            btnInventar2.Visibility = Visibility.Visible;
+            btnInventar.Visibility = Visibility.Collapsed;
         }
 
         private void BtnProductDesigner_Click(object sender, RoutedEventArgs e)
@@ -155,7 +160,20 @@ namespace UchPR
             receiptWindow.Owner = this;
             receiptWindow.ShowDialog();
         }
-        
+
+        private void BtnInventar_Click2(object sender, RoutedEventArgs e)
+        {
+            // Только для кладовщика!
+            if (currentUserRole != "Руководитель")
+            {
+                MessageBox.Show("Доступ разрешен только кладовщику.");
+                return;
+            }
+            var receiptWindow = new InventoryApprovalWindow();
+            receiptWindow.Owner = this;
+            receiptWindow.ShowDialog();
+        }
+
         private void SetInitialPage()
         {
             Page initialPage = null;
