@@ -107,6 +107,7 @@
     <Compile Include="AccessoryListWindow.xaml.cs">
       <DependentUpon>AccessoryListWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters.cs" />
     <Compile Include="DocumentHistoryItem.cs" />
     <Compile Include="DocumentHistoryRepository.cs" />
     <Compile Include="DocumentHistoryWindow.xaml.cs">
@@ -117,6 +118,9 @@
       <DependentUpon>FabricListWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Interfaces.cs" />
+    <Compile Include="InventoryWindow.xaml.cs">
+      <DependentUpon>InventoryWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MaterialReceiptItem.cs" />
     <Compile Include="MaterialReceiptWindow.xaml.cs">
       <DependentUpon>MaterialReceiptWindow.xaml</DependentUpon>
@@ -165,6 +169,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="FabricListWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="InventoryWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
