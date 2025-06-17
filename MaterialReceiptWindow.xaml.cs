@@ -6,6 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using Npgsql;
 
 namespace UchPR
@@ -96,25 +97,32 @@ namespace UchPR
             materialTypeColumn.ItemsSource = GetMaterialTypes();
             materialTypeColumn.DisplayMemberPath = "Name";
             materialTypeColumn.SelectedValuePath = "Type";
-            materialTypeColumn.SelectedValueBinding = new System.Windows.Data.Binding("MaterialType");
+            materialTypeColumn.SelectedValueBinding = new System.Windows.Data.Binding("MaterialType")
+            {
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+            };
 
-            // Настройка колонки наименования
+            // Настройка колонки наименования - ИСПРАВЛЕНО
             var materialNameColumn = dgMaterials.Columns[1] as DataGridComboBoxColumn;
             materialNameColumn.DisplayMemberPath = "Name";
-            materialNameColumn.SelectedValuePath = "Article";
-            materialNameColumn.SelectedValueBinding = new System.Windows.Data.Binding("MaterialArticle");
+            materialNameColumn.SelectedValuePath = "Id"; // БЫЛО Article, СТАЛО Id
+            materialNameColumn.SelectedValueBinding = new System.Windows.Data.Binding("MaterialArticle")
+            {
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+            };
 
             // Настройка колонки единиц измерения
             var unitColumn = dgMaterials.Columns[3] as DataGridComboBoxColumn;
             unitColumn.ItemsSource = GetUnitsOfMeasurement();
             unitColumn.DisplayMemberPath = "Name";
             unitColumn.SelectedValuePath = "Code";
-            unitColumn.SelectedValueBinding = new System.Windows.Data.Binding("UnitCode");
+            unitColumn.SelectedValueBinding = new System.Windows.Data.Binding("UnitCode")
+            {
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+            };
 
-            // Добавляем обработчик окончания редактирования
             dgMaterials.CellEditEnding += DgMaterials_CellEditEnding;
         }
-
         private void DgMaterials_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
         {
             if (e.EditAction == DataGridEditAction.Cancel) return;
@@ -436,12 +444,25 @@ namespace UchPR
 
         private bool ValidateDocument()
         {
+            // Отладочная информация
+            System.Diagnostics.Debug.WriteLine($"Всего строк в receiptLines: {receiptLines.Count}");
+
+            foreach (var line in receiptLines)
+            {
+                System.Diagnostics.Debug.WriteLine($"Строка: MaterialType='{line.MaterialType}', " +
+                                                 $"MaterialArticle='{line.MaterialArticle}', " +
+                                                 $"Quantity={line.Quantity}, " +
+                                                 $"UnitPrice={line.UnitPrice}");
+            }
+
             // Проверка заполненности строк
             var validLines = receiptLines.Where(line =>
                 !string.IsNullOrEmpty(line.MaterialType) &&
                 !string.IsNullOrEmpty(line.MaterialArticle) &&
                 line.Quantity > 0 &&
                 line.UnitPrice > 0).ToList();
+
+            System.Diagnostics.Debug.WriteLine($"Валидных строк: {validLines.Count}");
 
             if (validLines.Count == 0)
             {
@@ -751,22 +772,52 @@ namespace UchPR
 
     public class MaterialReceiptLine : INotifyPropertyChanged
     {
+        private string _materialType;
+        private string _materialArticle;
         private decimal _quantity;
         private decimal _unitPrice;
         private decimal _totalSum;
+        private int _unitCode;
 
         public int LineId { get; set; }
-        public string MaterialType { get; set; }
-        public string MaterialArticle { get; set; }
+
+        public string MaterialType
+        {
+            get => _materialType;
+            set
+            {
+                if (_materialType != value)
+                {
+                    _materialType = value;
+                    OnPropertyChanged(nameof(MaterialType));
+                }
+            }
+        }
+
+        public string MaterialArticle
+        {
+            get => _materialArticle;
+            set
+            {
+                if (_materialArticle != value)
+                {
+                    _materialArticle = value;
+                    OnPropertyChanged(nameof(MaterialArticle));
+                }
+            }
+        }
 
         public decimal Quantity
         {
             get => _quantity;
             set
             {
-                _quantity = value;
-                OnPropertyChanged(nameof(Quantity));
-                CalculateTotalSum();
+                if (_quantity != value)
+                {
+                    _quantity = value;
+                    OnPropertyChanged(nameof(Quantity));
+                    CalculateTotalSum();
+                }
             }
         }
 
@@ -775,9 +826,12 @@ namespace UchPR
             get => _unitPrice;
             set
             {
-                _unitPrice = value;
-                OnPropertyChanged(nameof(UnitPrice));
-                CalculateTotalSum();
+                if (_unitPrice != value)
+                {
+                    _unitPrice = value;
+                    OnPropertyChanged(nameof(UnitPrice));
+                    CalculateTotalSum();
+                }
             }
         }
 
@@ -786,12 +840,26 @@ namespace UchPR
             get => _totalSum;
             set
             {
-                _totalSum = value;
-                OnPropertyChanged(nameof(TotalSum));
+                if (_totalSum != value)
+                {
+                    _totalSum = value;
+                    OnPropertyChanged(nameof(TotalSum));
+                }
             }
         }
 
-        public int UnitCode { get; set; }
+        public int UnitCode
+        {
+            get => _unitCode;
+            set
+            {
+                if (_unitCode != value)
+                {
+                    _unitCode = value;
+                    OnPropertyChanged(nameof(UnitCode));
+                }
+            }
+        }
 
         public void CalculateTotalSum()
         {
@@ -804,6 +872,7 @@ namespace UchPR
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
+
 
     public class MaterialTypeItem
     {
