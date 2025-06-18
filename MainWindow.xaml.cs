@@ -63,6 +63,8 @@ namespace UchPR
             btnInventar2.Visibility = Visibility.Collapsed;
             btnInventar.Visibility = Visibility.Collapsed;
             btnReports.Visibility = Visibility.Collapsed;
+            btnCreateProduction.Visibility = Visibility.Collapsed;
+           
 
         }
 
@@ -75,6 +77,8 @@ namespace UchPR
             btnInventar.Visibility = Visibility.Visible;
             btnInventar2.Visibility = Visibility.Collapsed;
             btnReports.Visibility = Visibility.Collapsed;
+            btnCreateProduction.Visibility = Visibility.Collapsed;
+            btnOrders2.Visibility = Visibility.Collapsed;
         }
 
         private void ConfigureManagerNavigation()
@@ -88,6 +92,8 @@ namespace UchPR
             btnInventar2.Visibility = Visibility.Collapsed;
             btnInventar.Visibility = Visibility.Collapsed;
             btnReports.Visibility = Visibility.Collapsed;
+            btnCreateProduction.Visibility = Visibility.Visible;
+            btnOrders2.Visibility = Visibility.Collapsed;
         }
 
         private void ConfigureDirectorNavigation()
@@ -101,9 +107,21 @@ namespace UchPR
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
             btnInventar2.Visibility = Visibility.Visible;
             btnInventar.Visibility = Visibility.Collapsed;
+            btnOrders2.Visibility = Visibility.Collapsed;
+            btnCreateProduction.Visibility = Visibility.Collapsed;
             btnReports.Visibility = Visibility.Visible;
         }
 
+
+        private void BtnOrdersClient_Click(object sender, RoutedEventArgs e)
+        {
+            string userLogin = GetCurrentUserLogin(); // Реализуйте этот метод
+            string userPassword = GetCurrentUserPassword();
+
+            var designerWindow = new OrderWindow(userLogin, "Заказчик");
+            designerWindow.Owner = this;
+            designerWindow.ShowDialog();
+        }
         private void BtnProductDesigner_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -166,7 +184,12 @@ namespace UchPR
             receiptWindow.Owner = this;
             receiptWindow.ShowDialog();
         }
-
+        private void btnCreateProduction_Click(object sender, RoutedEventArgs e)
+        {
+            var receiptWindow = new CreateProduction();
+            receiptWindow.Owner = this;
+            receiptWindow.ShowDialog();
+        }
         private void BtnInventar_Click2(object sender, RoutedEventArgs e)
         {
             // Только для кладовщика!

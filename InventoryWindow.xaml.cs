@@ -1351,6 +1351,44 @@ namespace UchPR
     }
     public static class SafeDataReader
     {
+        public static int GetSafeInt32(DataRow row, string columnName)
+        {
+            try
+            {
+                if (row == null || !row.Table.Columns.Contains(columnName))
+                    return 0;
+
+                var value = row[columnName];
+
+                if (value == null || value == DBNull.Value)
+                    return 0;
+
+                if (value is int intValue)
+                    return intValue;
+
+                if (value is long longValue)
+                    return (int)longValue;
+
+                if (value is decimal decimalValue)
+                    return (int)decimalValue;
+
+                try
+                {
+                    return Convert.ToInt32(value);
+                }
+                catch
+                {
+                    if (int.TryParse(value.ToString(), out int parsedValue))
+                        return parsedValue;
+
+                    return 0;
+                }
+            }
+            catch
+            {
+                return 0;
+            }
+        }
         public static int GetSafeInt32(NpgsqlDataReader reader, string columnName)
         {
             try
@@ -1396,7 +1434,6 @@ namespace UchPR
         {
             try
             {
-                // Получаем индекс колонки по имени
                 int ordinal = reader.GetOrdinal(columnName);
 
                 if (reader.IsDBNull(ordinal))
@@ -1424,7 +1461,6 @@ namespace UchPR
             }
             catch (IndexOutOfRangeException)
             {
-                // Колонка не найдена
                 return 0m;
             }
             catch
@@ -1432,6 +1468,72 @@ namespace UchPR
                 return 0m;
             }
         }
+
+        public static decimal GetSafeDecimal(DataRow row, string columnName)
+        {
+            try
+            {
+                if (row == null || !row.Table.Columns.Contains(columnName))
+                    return 0m;
+
+                var value = row[columnName];
+
+                if (value == null || value == DBNull.Value)
+                    return 0m;
+
+                if (value is decimal decimalValue)
+                    return decimalValue;
+
+                if (value is double doubleValue)
+                    return (decimal)doubleValue;
+
+                if (value is float floatValue)
+                    return (decimal)floatValue;
+
+                if (value is int intValue)
+                    return (decimal)intValue;
+
+                if (value is long longValue)
+                    return (decimal)longValue;
+
+                try
+                {
+                    return Convert.ToDecimal(value);
+                }
+                catch
+                {
+                    if (decimal.TryParse(value.ToString(), out decimal parsedValue))
+                        return parsedValue;
+
+                    return 0m;
+                }
+            }
+            catch
+            {
+                return 0m;
+            }
+        }
+
+        public static string GetSafeString(DataRow row, string columnName)
+        {
+            try
+            {
+                if (row == null || !row.Table.Columns.Contains(columnName))
+                    return string.Empty;
+
+                var value = row[columnName];
+
+                if (value == null || value == DBNull.Value)
+                    return string.Empty;
+
+                return value.ToString() ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
 
         public static string GetSafeString(NpgsqlDataReader reader, string columnName)
         {

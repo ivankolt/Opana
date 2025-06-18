@@ -60,7 +60,11 @@
                         Width="160" Height="35" Margin="5" Click="BtnProductDesigner_Click"
                         Background="#FFFCD6" FontWeight="Bold" Foreground="#B5D5CA"/>
 
-               
+                <Button x:Name="btnCreateProduction" Content="Создание изделий" 
+         Width="160" Height="35" Margin="5" Click="btnCreateProduction_Click"
+         Background="#FFFFFF" FontWeight="Bold" Foreground="#000000"/>
+
+
 
                 <Button x:Name="btnInventar" Content="Инвентарь" 
          Width="160" Height="35" Margin="5" Click="BtnInventar_Click"
@@ -74,6 +78,10 @@
                 <Button x:Name="btnOrders" Content="Заказы" 
                         Width="120" Height="35" Margin="5" Click="BtnOrders_Click"
                         Background="White" FontWeight="SemiBold"/>
+
+                <Button x:Name="btnOrders2" Content="Заказы" 
+        Width="120" Height="35" Margin="5" Click="BtnOrdersClient_Click"
+        Background="White" FontWeight="SemiBold"/>
 
                 <!-- Кнопки для руководителя -->
                 <Button x:Name="btnReports" Content="Отчеты" 

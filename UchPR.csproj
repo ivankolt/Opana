@@ -108,6 +108,9 @@
       <DependentUpon>AccessoryListWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converters.cs" />
+    <Compile Include="CreateProduction.xaml.cs">
+      <DependentUpon>CreateProduction.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DocumentHistoryItem.cs" />
     <Compile Include="DocumentHistoryRepository.cs" />
     <Compile Include="DocumentHistoryWindow.xaml.cs">
@@ -133,6 +136,9 @@
     </Compile>
     <Compile Include="MaterialStockItem.cs" />
     <Compile Include="Models.cs" />
+    <Compile Include="OrderWindow.xaml.cs">
+      <DependentUpon>OrderWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ProductCompositionItem.cs" />
     <Compile Include="ProductDesignerWindow.xaml.cs">
       <DependentUpon>ProductDesignerWindow.xaml</DependentUpon>
@@ -167,6 +173,10 @@
       <DependentUpon>WarehousePage.xaml</DependentUpon>
     </Compile>
     <Page Include="AccessoryListWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CreateProduction.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -211,6 +221,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="MaterialReceiptWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="OrderWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
