@@ -1,0 +1,89 @@
+﻿<Window x:Class="UchPR.CustomerOrdersWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Мои заказы" Height="600" Width="900"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <!-- Стили для статусов -->
+        <Style x:Key="StatusStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Новый">
+                    <Setter Property="Foreground" Value="Blue"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="На проверке">
+                    <Setter Property="Foreground" Value="Orange"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="К оплате">
+                    <Setter Property="Foreground" Value="DarkGoldenrod"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Оплачен">
+                    <Setter Property="Foreground" Value="Green"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="В производстве">
+                    <Setter Property="Foreground" Value="DarkCyan"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Готов">
+                    <Setter Property="Foreground" Value="DarkGreen"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Отклонен">
+                    <Setter Property="Foreground" Value="Red"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Стиль для кнопки Оплатить -->
+        <Style x:Key="PayButtonStyle" TargetType="Button">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Setter Property="Background" Value="DarkBlue"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="К оплате">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <Border Grid.Row="0" Background="#B5D5CA">
+            <TextBlock Text="История моих заказов" FontSize="20" FontWeight="Bold" 
+                       Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        </Border>
+
+        <!-- Список заказов -->
+        <DataGrid x:Name="dgOrders" Grid.Row="1" Margin="20" 
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  AlternatingRowBackground="#FFFCD6" FontSize="14">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Номер" Binding="{Binding OrderNumber}" Width="100"/>
+                <DataGridTextColumn Header="Дата" Binding="{Binding OrderDate, StringFormat=dd.MM.yyyy}" Width="120"/>
+                <DataGridTextColumn Header="Сумма" Binding="{Binding TotalCost, StringFormat=C}" Width="150"/>
+                <DataGridTemplateColumn Header="Статус" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Status}" Style="{StaticResource StatusStyle}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Действие" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button x:Name="btnPay" Content="💳 Оплатить" 
+                                    Style="{StaticResource PayButtonStyle}"
+                                    Click="BtnPay_Click"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>

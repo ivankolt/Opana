@@ -19,6 +19,7 @@ namespace UchPR
         private string currentUserRole;
         private int? currentOrderNumber;
         private DateTime currentOrderDate;
+        private string currentStatus;
 
         private readonly IUserSessionService _userSessionService;
 
@@ -41,27 +42,46 @@ namespace UchPR
 
             LoadAvailableProducts();
             UpdateTotals();
+            SetupCustomerControls();
 
             // Подписка на изменения в заказе
             orderItems.CollectionChanged += (s, e) => UpdateTotals();
+        }
+        private void SetupCustomerControls()
+        {
+            // Клиент может редактировать заказ только если он новый
+            bool isEditable = (currentStatus == "Новый" || string.IsNullOrEmpty(currentStatus));
+
+            dgOrderItems.IsReadOnly = !isEditable;
+            cbProducts.IsEnabled = isEditable;
+            txtQuantity.IsEnabled = isEditable;
+            btnAddProduct.IsEnabled = isEditable;
+            btnSaveOrder.Visibility = isEditable ? Visibility.Visible : Visibility.Collapsed;
+            btnSubmitOrder.Visibility = isEditable ? Visibility.Visible : Visibility.Collapsed;
+
+            // Кнопка оплаты видна, только когда заказ имеет статус "К оплате"
+            btnPayForOrder.Visibility = (currentStatus == "К оплате") ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void LoadAvailableProducts()
         {
             try
             {
+                // ИСПРАВЛЕННЫЙ ЗАПРОС:
+                // - Используем JOIN для получения только тех товаров, что есть на складе.
+                // - Рассчитываем среднюю себестоимость (AVG) из productwarehouse.
                 string query = @"
-                    SELECT 
-                        p.article,
-                        pn.name,
-                        p.price,
-                        COALESCE(SUM(pw.quantity), 0) AS available_quantity
-                    FROM product p
-                    LEFT JOIN productname pn ON p.name_id = pn.id
-                    LEFT JOIN productwarehouse pw ON p.article = pw.product_article
-                    GROUP BY p.article, pn.name, p.price
-                    HAVING COALESCE(SUM(pw.quantity), 0) > 0
-                    ORDER BY pn.name";
+            SELECT 
+                p.article,
+                pn.name,
+                AVG(pw.production_cost) AS price,
+                SUM(pw.quantity) AS available_quantity
+            FROM product p
+            JOIN productname pn ON p.name_id = pn.id
+            JOIN productwarehouse pw ON p.article = pw.product_article
+            GROUP BY p.article, pn.name
+            HAVING SUM(pw.quantity) > 0
+            ORDER BY pn.name";
 
                 var data = database.GetData(query);
                 availableProducts.Clear();
@@ -72,6 +92,7 @@ namespace UchPR
                     {
                         Article = row["article"].ToString(),
                         Name = $"Арт. {row["article"]} - {row["name"]}",
+                        // Теперь цена берется из рассчитанного среднего значения
                         Price = SafeDataReader.GetSafeDecimal(row, "price"),
                         AvailableQuantity = SafeDataReader.GetSafeInt32(row, "available_quantity")
                     });
@@ -236,6 +257,22 @@ namespace UchPR
             {
                 MessageBox.Show($"Ошибка отправки заказа: {ex.Message}");
             }
+        }
+
+        private void BtnPayForOrder_Click(object sender, RoutedEventArgs e)
+        {
+            // Имитация оплаты: просто меняем статус заказа
+            UpdateOrderStatus("Оплачен");
+            MessageBox.Show("Заказ успешно оплачен и будет передан в производство.");
+            this.Close();
+        }
+
+        private void UpdateOrderStatus(string newStatus)
+        {
+            // Метод для обновления статуса заказа в БД...
+            // ...
+            currentStatus = newStatus;
+            SetupCustomerControls(); // Обновляем интерфейс
         }
 
         private bool ValidateOrder()

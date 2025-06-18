@@ -111,6 +111,9 @@
     <Compile Include="CreateProduction.xaml.cs">
       <DependentUpon>CreateProduction.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CustomerOrdersWindow.xaml.cs">
+      <DependentUpon>CustomerOrdersWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DocumentHistoryItem.cs" />
     <Compile Include="DocumentHistoryRepository.cs" />
     <Compile Include="DocumentHistoryWindow.xaml.cs">
@@ -129,6 +132,12 @@
     </Compile>
     <Compile Include="InventoryWindow.xaml.cs">
       <DependentUpon>InventoryWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ManagerOrderDetails.xaml.cs">
+      <DependentUpon>ManagerOrderDetails.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ManagerOrdersList.xaml.cs">
+      <DependentUpon>ManagerOrdersList.xaml</DependentUpon>
     </Compile>
     <Compile Include="MaterialReceiptItem.cs" />
     <Compile Include="MaterialReceiptWindow.xaml.cs">
@@ -180,6 +189,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="CustomerOrdersWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="DocumentHistoryWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -220,6 +233,14 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="ManagerOrderDetails.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ManagerOrdersList.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MaterialReceiptWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

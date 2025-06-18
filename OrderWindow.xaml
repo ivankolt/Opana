@@ -201,6 +201,11 @@
                        FontSize="16" FontWeight="Bold" Padding="30,10" Margin="10,0"
                        Click="BtnSubmitOrder_Click"/>
 
+                <Button x:Name="btnPayForOrder" Content="💳 Оплатить заказ" 
+                Background="DarkBlue" Foreground="White"
+                FontSize="16" FontWeight="Bold" Padding="30,10" Margin="10,0"
+                Click="BtnPayForOrder_Click" Visibility="Collapsed"/>
+
                 <Button x:Name="btnCancel" Content="❌ Отмена" 
                        Background="Gray" 
                        Foreground="{StaticResource TextWhite}"

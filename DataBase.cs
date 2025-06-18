@@ -49,6 +49,86 @@
                 return null;
             }
         }
+        public object ExecuteScalar(string query, NpgsqlParameter[] parameters = null)
+        {
+            try
+            {
+                using (var conn = new NpgsqlConnection(connectionString))
+                {
+                    conn.Open();
+                    using (var command = new NpgsqlCommand(query, conn))
+                    {
+                        if (parameters != null)
+                        {
+                            command.Parameters.AddRange(parameters);
+                        }
+                        // ExecuteScalar возвращает первое поле первой строки результата
+                        return command.ExecuteScalar();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Для отладки можно вывести ошибку в консоль
+                Console.WriteLine($"Ошибка ExecuteScalar: {ex.Message}");
+                throw new Exception($"Ошибка выполнения запроса: {ex.Message}");
+            }
+        }
+
+        public DataTable GetDataWithTransaction(string query, NpgsqlConnection connection, NpgsqlTransaction transaction, NpgsqlParameter[] parameters = null)
+        {
+            DataTable dataTable = new DataTable();
+            using (var command = new NpgsqlCommand(query, connection, transaction))
+            {
+                if (parameters != null) command.Parameters.AddRange(parameters);
+                using (var adapter = new NpgsqlDataAdapter(command))
+                {
+                    adapter.Fill(dataTable);
+                }
+            }
+            return dataTable;
+        }
+
+        public object ExecuteScalarWithTransaction(string query, NpgsqlConnection connection, NpgsqlTransaction transaction, NpgsqlParameter[] parameters = null)
+        {
+            using (var command = new NpgsqlCommand(query, connection, transaction))
+            {
+                if (parameters != null) command.Parameters.AddRange(parameters);
+                return command.ExecuteScalar();
+            }
+        }
+
+        public int ExecuteNonQueryWithTransaction(string query, NpgsqlConnection connection, NpgsqlTransaction transaction, NpgsqlParameter[] parameters = null)
+        {
+            using (var command = new NpgsqlCommand(query, connection, transaction))
+            {
+                if (parameters != null) command.Parameters.AddRange(parameters);
+                return command.ExecuteNonQuery();
+            }
+        }
+
+        public int ExecuteNonQuery(string query, NpgsqlParameter[] parameters = null)
+        {
+            try
+            {
+                using (var conn = new NpgsqlConnection(connectionString))
+                {
+                    conn.Open();
+                    using (var command = new NpgsqlCommand(query, conn))
+                    {
+                        if (parameters != null)
+                        {
+                            command.Parameters.AddRange(parameters);
+                        }
+                        return command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка выполнения запроса: {ex.Message}");
+            }
+        }
 
         public static string GetImagePath(string article, string subfolder)
         {

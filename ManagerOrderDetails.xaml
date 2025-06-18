@@ -1,0 +1,87 @@
+﻿<Window x:Class="UchPR.ManagerOrderDetails"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Управление заказом" Height="700" Width="1000"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Инфо о заказе -->
+            <RowDefinition Height="*"/>
+            <!-- Позиции заказа -->
+            <RowDefinition Height="Auto"/>
+            <!-- Итоги -->
+            <RowDefinition Height="80"/>
+            <!-- Панель управления -->
+        </Grid.RowDefinitions>
+
+        <!-- Информация о заказе -->
+        <Border Grid.Row="0" Background="#FFFCD6" Padding="20">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="txtOrderInfo" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                <TextBlock Text="Текущий статус:" FontSize="14" FontWeight="SemiBold"/>
+                <TextBlock x:Name="txtOrderStatus" FontSize="14" FontWeight="Bold" Margin="10,0" Foreground="DarkBlue"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Список товаров в заказе -->
+        <DataGrid x:Name="dgOrderItems" Grid.Row="1" Margin="20" IsReadOnly="True"
+          AutoGenerateColumns="False" CanUserAddRows="False"
+          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#DDE2E6"
+          AlternatingRowBackground="#F7F9FC" RowHeight="35">
+
+            <!-- Стиль для заголовков колонок -->
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#E6EAF0"/>
+                    <Setter Property="Foreground" Value="#333333"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Padding" Value="10,0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,2"/>
+                    <Setter Property="BorderBrush" Value="#DDE2E6"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+
+            <!-- Стиль для ячеек -->
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Padding" Value="10,5"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                </Style>
+            </DataGrid.CellStyle>
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Артикул" Binding="{Binding ProductArticle}" Width="120"/>
+                <DataGridTextColumn Header="Наименование изделия" Binding="{Binding ProductName}" Width="*"/>
+                <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="100"/>
+
+                <!-- Форматирование цены как валюты (рубли) -->
+                <DataGridTextColumn Header="Цена за ед." Binding="{Binding UnitPrice, StringFormat=C, ConverterCulture='ru-RU'}" Width="150"/>
+                <DataGridTextColumn Header="Стоимость" Binding="{Binding TotalPrice, StringFormat=C, ConverterCulture='ru-RU'}" Width="150"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Итоги -->
+        <Border Grid.Row="2" Background="#E0A9AF" Padding="20">
+            <TextBlock x:Name="txtTotalCost" Text="Итоговая стоимость: 0,00 руб." 
+                       FontSize="18" FontWeight="Bold" HorizontalAlignment="Right"/>
+        </Border>
+
+        <!-- Панель управления для менеджера -->
+        <Border Grid.Row="3" Background="#B5D5CA" Padding="20">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="btnNextStep" Content="Далее" 
+                FontSize="16" FontWeight="Bold" Padding="30,10" Margin="20,0,5,0"
+                Background="Green" Foreground="White"
+                Click="BtnNextStep_Click"/>
+
+                <Button x:Name="btnRejectOrder" Content="❌ Отклонить" 
+                FontSize="14" Padding="15,8" Margin="20,0,5,0"
+                Background="Red" Foreground="White"
+                Click="BtnRejectOrder_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

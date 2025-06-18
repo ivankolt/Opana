@@ -260,10 +260,12 @@ namespace UchPR
 
         private void BtnOrders_Click(object sender, RoutedEventArgs e)
         {
-            // var ordersPage = new OrdersPage(currentUserRole);
-            // MainFrame.Navigate(ordersPage);
-            // HighlightActiveButton(btnOrders);
-            MessageBox.Show("Страница заказов в разработке");
+            string userLogin = GetCurrentUserLogin(); // Реализуйте этот метод
+            string userPassword = GetCurrentUserPassword();
+            var ordersPage = new ManagerOrdersList(userLogin, userPassword);
+            ordersPage.Owner = this;
+            ordersPage.ShowDialog();
+
         }
 
         private void BtnReports_Click(object sender, RoutedEventArgs e)
@@ -285,10 +287,10 @@ namespace UchPR
 
         private void BtnMyOrders_Click(object sender, RoutedEventArgs e)
         {
-            // var myOrdersPage = new CustomerOrdersPage(currentUserRole);
-            // MainFrame.Navigate(myOrdersPage);
-            // HighlightActiveButton(btnMyOrders);
-            MessageBox.Show("Страница заказов заказчика в разработке");
+            string userLogin = GetCurrentUserLogin();
+            var statistics = new CustomerOrdersWindow(userLogin);
+            statistics.Owner = this;
+            statistics.ShowDialog();
         }
 
         private void HighlightActiveButton(Button activeButton)
