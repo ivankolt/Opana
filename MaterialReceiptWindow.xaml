@@ -100,10 +100,9 @@
                                SelectedValuePath="Code"
                                SelectedValueBinding="{Binding UnitCode, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="Цена за ед." 
-                           Binding="{Binding UnitPrice, StringFormat=C, UpdateSourceTrigger=PropertyChanged}" 
-                           Width="1.5*"/>
+                           Binding="{Binding UnitPrice, StringFormat={}{0:N2}}"  Width="1.5*"/>
                 <DataGridTextColumn Header="Сумма" 
-                           Binding="{Binding TotalSum, StringFormat=C}" 
+                           Binding="{Binding TotalSum, StringFormat={}{0:N2}}" 
                            IsReadOnly="True" Width="1.5*"/>
             </DataGrid.Columns>
         </DataGrid>

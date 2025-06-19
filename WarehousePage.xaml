@@ -69,7 +69,7 @@
                 <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="100"/>
                 <DataGridTextColumn Header="Единица измерения" Binding="{Binding UnitName}" Width="120"/>
                 <DataGridTextColumn Header="Цена за ед." Binding="{Binding PurchasePrice, StringFormat=C}" Width="120"/>
-                <DataGridTextColumn Header="Общая стоимость" Binding="{Binding TotalCost, StringFormat=C}" Width="150"/>
+                <DataGridTextColumn Header="Общая стоимость" Binding="{Binding TotalCost, StringFormat={}{0:N2} руб.}" Width="150"/>
             </DataGrid.Columns>
         </DataGrid>
 

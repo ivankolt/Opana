@@ -107,11 +107,7 @@ namespace UchPR
             comp.name AS ""CompositionName"",
             COALESCE(fw.quantity, 0) AS ""StockQuantity"",
             COALESCE(fw.total_cost, 0) AS ""TotalCost"",
-            CASE 
-                WHEN COALESCE(fw.quantity, 0) > 0 
-                THEN ROUND(COALESCE(fw.total_cost, 0) / fw.quantity, 2)
-                ELSE 0 
-            END AS ""AveragePrice"",
+            f.price AS ""Price"",
             uom.name AS ""AccountingUnitName"",
             COALESCE(f.scrap_threshold, 0) AS ""ScrapLimit"",
             0 AS ""MinStock""
@@ -168,7 +164,7 @@ namespace UchPR
                         StockQuantity = Convert.ToDecimal(row["StockQuantity"] ?? 0),
                         AccountingUnitName = row["AccountingUnitName"]?.ToString() ?? "шт",
                         TotalCost = Convert.ToDecimal(row["TotalCost"] ?? 0),
-                        AveragePrice = Convert.ToDecimal(row["AveragePrice"] ?? 0),
+                        Price = Convert.ToDecimal(row["Price"] ?? 0),
                         ScrapLimit = Convert.ToDecimal(row["ScrapLimit"] ?? 0),
                         MinStock = Convert.ToDecimal(row["MinStock"] ?? 0),
                         // Путь к изображению
@@ -566,7 +562,7 @@ namespace UchPR
             public decimal StockQuantity { get; set; }
             public string AccountingUnitName { get; set; }
             public decimal TotalCost { get; set; }
-            public decimal AveragePrice { get; set; }
+            public decimal Price { get; set; }
             public string ImagePath { get; set; }
 
             // Добавляем недостающие свойства

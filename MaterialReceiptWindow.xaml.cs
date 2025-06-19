@@ -449,10 +449,25 @@ namespace UchPR
 
             foreach (var line in receiptLines)
             {
-                System.Diagnostics.Debug.WriteLine($"Строка: MaterialType='{line.MaterialType}', " +
-                                                 $"MaterialArticle='{line.MaterialArticle}', " +
-                                                 $"Quantity={line.Quantity}, " +
-                                                 $"UnitPrice={line.UnitPrice}");
+                if (!string.IsNullOrEmpty(line.MaterialType) &&
+                    !string.IsNullOrEmpty(line.MaterialArticle) &&
+                    line.Quantity > 0 &&
+                    line.UnitPrice > 0)
+                {
+                    decimal basePrice = GetBasePrice(line.MaterialType, line.MaterialArticle);
+
+                    if (basePrice > 0 && line.UnitPrice > basePrice)
+                    {
+                        MessageBox.Show(
+                            $"Цена за ед. ({line.UnitPrice:N2} руб.) по материалу '{line.MaterialArticle}' " +
+                            $"превышает базовую цену ({basePrice:N2} руб.) в справочнике.\n" +
+                            $"Проверьте корректность данных.",
+                            "Ошибка в цене",
+                            MessageBoxButton.OK, MessageBoxImage.Warning
+                        );
+                        return false;
+                    }
+                }
             }
 
             // Проверка заполненности строк
@@ -692,6 +707,42 @@ namespace UchPR
                 System.Diagnostics.Debug.WriteLine($"Ошибка сохранения в историю: {ex.Message}");
             }
         }
+        private decimal GetBasePrice(string materialType, string materialArticle)
+        {
+            try
+            {
+                string query = "";
+                if (materialType == "fabric")
+                {
+                    query = "SELECT price FROM fabric WHERE article = @article";
+                }
+                else if (materialType == "accessory")
+                {
+                    query = "SELECT price FROM accessory WHERE article = @article";
+                }
+                else
+                {
+                    return 0;
+                }
+
+                NpgsqlParameter[] parameters;
+                if (materialType == "fabric")
+                    parameters = new NpgsqlParameter[] { new NpgsqlParameter("@article", Convert.ToInt32(materialArticle)) };
+                else
+                    parameters = new NpgsqlParameter[] { new NpgsqlParameter("@article", materialArticle) };
+                var data = database.GetData(query, parameters);
+
+                if (data.Rows.Count > 0)
+                    return Convert.ToDecimal(data.Rows[0]["price"]);
+                else
+                    return 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
 
         private void AddToAccessoryWarehouse(NpgsqlConnection connection, NpgsqlTransaction transaction, MaterialReceiptLine line)
         {
