@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -24,7 +25,6 @@ namespace UchPR
             database = new DataBase();
             currentUserRole = userRole;
 
-            // Проверка прав доступа
             if (currentUserRole != "Кладовщик")
             {
                 MessageBox.Show("У вас нет прав для доступа к этой форме", "Ошибка доступа",
@@ -35,7 +35,7 @@ namespace UchPR
 
             LoadUnits();
             LoadCompositions();
-            LoadFabrics();
+            _ = LoadFabricsAsync(); // запуск без ожидания завершения
         }
 
         private void LoadUnits()
@@ -94,53 +94,55 @@ namespace UchPR
         }
 
 
-        private void LoadFabrics()
+        private async Task LoadFabricsAsync()
         {
             try
             {
                 string query = @"
-            SELECT 
-                f.article AS ""fabric_article"",
-                fn.name AS ""fabric_name"",
-                c.name AS ""ColorName"",
-                p.name AS ""PatternName"",
-                comp.name AS ""CompositionName"",
-                COALESCE(fw.quantity, 0) AS ""StockQuantity"",
-                COALESCE(fw.total_cost, 0) AS ""TotalCost"",
-                CASE 
-                    WHEN COALESCE(fw.quantity, 0) > 0 
-                    THEN ROUND(COALESCE(fw.total_cost, 0) / fw.quantity, 2)
-                    ELSE 0 
-                END AS ""AveragePrice"",
-                uom.name AS ""AccountingUnitName"",
-                COALESCE(f.scrap_threshold, 0) AS ""ScrapLimit"",
-                0 AS ""MinStock""
-            FROM 
-                public.fabric f
-            LEFT JOIN 
-                public.fabricname fn ON f.name_id = fn.code
-            LEFT JOIN 
-                public.colors c ON f.color_id = c.id
-            LEFT JOIN 
-                public.pattern p ON f.pattern_id = p.id
-            LEFT JOIN 
-                public.composition comp ON f.composition_id = comp.id
-            LEFT JOIN 
-                public.unitofmeasurement uom ON f.unit_of_measurement_id = uom.code
-            LEFT JOIN 
-                (SELECT fabric_article, SUM(COALESCE(total_cost, 0)) as total_cost, 
-                        SUM(COALESCE(length, 0) * COALESCE(width, 0)) as quantity
-                 FROM public.fabricwarehouse 
-                 WHERE fabric_article IS NOT NULL
-                 GROUP BY fabric_article) fw ON f.article = fw.fabric_article
-            ORDER BY 
-                f.article";
+        SELECT 
+            f.article AS ""fabric_article"",
+            fn.name AS ""fabric_name"",
+            c.name AS ""ColorName"",
+            p.name AS ""PatternName"",
+            comp.name AS ""CompositionName"",
+            COALESCE(fw.quantity, 0) AS ""StockQuantity"",
+            COALESCE(fw.total_cost, 0) AS ""TotalCost"",
+            CASE 
+                WHEN COALESCE(fw.quantity, 0) > 0 
+                THEN ROUND(COALESCE(fw.total_cost, 0) / fw.quantity, 2)
+                ELSE 0 
+            END AS ""AveragePrice"",
+            uom.name AS ""AccountingUnitName"",
+            COALESCE(f.scrap_threshold, 0) AS ""ScrapLimit"",
+            0 AS ""MinStock""
+        FROM 
+            public.fabric f
+        LEFT JOIN 
+            public.fabricname fn ON f.name_id = fn.code
+        LEFT JOIN 
+            public.colors c ON f.color_id = c.id
+        LEFT JOIN 
+            public.pattern p ON f.pattern_id = p.id
+        LEFT JOIN 
+            public.composition comp ON f.composition_id = comp.id
+        LEFT JOIN 
+            public.unitofmeasurement uom ON f.unit_of_measurement_id = uom.code
+        LEFT JOIN 
+            (SELECT fabric_article, SUM(COALESCE(total_cost, 0)) as total_cost, 
+                    SUM(COALESCE(length, 0) * COALESCE(width, 0)) as quantity
+             FROM public.fabricwarehouse 
+             WHERE fabric_article IS NOT NULL
+             GROUP BY fabric_article) fw ON f.article = fw.fabric_article
+        ORDER BY 
+            f.article";
 
-                fabricsTable = database.GetData(query);
+                // Асинхронно получаем таблицу данных
+                var fabricsTable = await Task.Run(() => database.GetData(query));
 
                 if (fabricsTable == null)
                 {
                     fabricsTable = new DataTable();
+                    lbFabrics.ItemsSource = new List<FabricCardViewModel>();
                     return;
                 }
 
@@ -171,7 +173,6 @@ namespace UchPR
                         MinStock = Convert.ToDecimal(row["MinStock"] ?? 0),
                         // Путь к изображению
                         ImagePath = GetFabricImagePath(Convert.ToInt32(row["fabric_article"]))
-
                     };
 
                     fabricsList.Add(fabric);
@@ -181,12 +182,12 @@ namespace UchPR
                 lbFabrics.ItemsSource = fabricsList;
 
                 // Сохраняем исходную таблицу для фильтрации
+                this.fabricsTable = fabricsTable;
                 AddCalculatedColumns();
                 if (fabricsTable.Rows.Count > 0)
                 {
                     ProcessFabricData();
                 }
-
             }
             catch (Exception ex)
             {
@@ -194,6 +195,7 @@ namespace UchPR
                 lbFabrics.ItemsSource = new List<FabricCardViewModel>();
             }
         }
+
 
         // Метод для получения пути к изображению ткани
         private string GetFabricImagePath(int fabricArticle)
@@ -383,7 +385,7 @@ namespace UchPR
        
         private void BtnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            LoadFabrics();
+            LoadFabricsAsync();
         }
 
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
@@ -392,7 +394,7 @@ namespace UchPR
           //  var addWindow = new FabricEditWindow();
           //  if (addWindow.ShowDialog() == true)
             {
-                LoadFabrics();
+                LoadFabricsAsync();
             }
         }
         private void ApplyFilters()
@@ -447,7 +449,7 @@ namespace UchPR
             // var editWindow = new FabricEditWindow(fabricId);
             // if (editWindow.ShowDialog() == true)
             {
-                LoadFabrics();
+                LoadFabricsAsync();
             }
         }
         private FabricCardViewModel GetSelectedFabric()
@@ -475,7 +477,7 @@ namespace UchPR
             var receiptWindow = new MaterialReceiptWindow("fabric", fabricId);
             if (receiptWindow.ShowDialog() == true)
             {
-                LoadFabrics();
+                LoadFabricsAsync();
             }
         }
 
@@ -512,7 +514,7 @@ namespace UchPR
                     string message = $"Списано обрезков на общую сумму {totalScrapCost:F2} руб.:\n\n";
                     message += string.Join("\n", scrapItems);
                     MessageBox.Show(message, "Списание обрезков");
-                    LoadFabrics();
+                    LoadFabricsAsync();
                 }
                 else
                 {
@@ -551,7 +553,7 @@ namespace UchPR
          //   var settingsWindow = new FabricSettingsWindow();
            // if (settingsWindow.ShowDialog() == true)
             {
-                LoadFabrics();
+                LoadFabricsAsync();
             }
         }
         public class FabricCardViewModel

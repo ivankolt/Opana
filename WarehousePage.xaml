@@ -13,29 +13,13 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="80"/>
+            <RowDefinition Height="0"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="60"/>
         </Grid.RowDefinitions>
 
-        <!-- ======================= ЗАГОЛОВОК ======================= -->
-        <Border Grid.Row="0" Background="{StaticResource PrimaryColor1}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <Image Grid.Column="0" Source="/Images/Logo/logo-01.jpg" 
-                       Width="60" Height="60" Margin="10" Stretch="Uniform"/>
-
-                <TextBlock Grid.Column="1" Text="Учет материалов на складе" 
-                           VerticalAlignment="Center" FontSize="18" FontWeight="Bold"
-                           Foreground="{StaticResource TextWhite}" Margin="15,0,0,0"/>
-            </Grid>
-        </Border>
-
+        
         <!-- ======================= ПАНЕЛЬ ФИЛЬТРОВ ======================= -->
         <Border Grid.Row="1" Background="{StaticResource AdditionalColor1}" Padding="20,10">
             <StackPanel Orientation="Horizontal">
@@ -64,8 +48,11 @@
                 <DataGridTextColumn Header="Ширина (м)" Binding="{Binding Width, StringFormat={}{0:F2}}" Width="100"/>
                 <DataGridTextColumn Header="Длина (м)" Binding="{Binding Length, StringFormat={}{0:F2}}" Width="100"/>
                 <DataGridTextColumn Header="Площадь (м²)" Binding="{Binding Area, StringFormat={}{0:F2}}" Width="100"/>
-                <DataGridTextColumn Header="Цена за м²" Binding="{Binding PurchasePrice, StringFormat=C}" Width="120"/>
-                <DataGridTextColumn Header="Общая стоимость" Binding="{Binding TotalCost, StringFormat=C}" Width="150"/>
+                <DataGridTextColumn Header="Цена за м²" Binding="{Binding PurchasePrice, StringFormat={}{0:N2} руб.}" Width="120"/>
+                <DataGridTextColumn 
+                Header="Общая стоимость" 
+                Binding="{Binding TotalCost, StringFormat={}{0:N2} руб.}" 
+                Width="150"/>
             </DataGrid.Columns>
         </DataGrid>
 

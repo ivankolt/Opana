@@ -1,0 +1,86 @@
+﻿<Window x:Class="UchPR.ProductSelectionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Выберите изделия для заказа" Height="700" Width="900"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <SolidColorBrush x:Key="PrimaryColor1" Color="#B5D5CA"/>
+        <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
+        <SolidColorBrush x:Key="AdditionalColor2" Color="#FFFCD6"/>
+        <SolidColorBrush x:Key="SuccessColor" Color="#4CAF50"/>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryColor1}">
+            <TextBlock Text="Добавление изделий в заказ"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                       FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextWhite}"/>
+        </Border>
+
+        <!-- Список изделий -->
+        <ListBox x:Name="lbProducts" Grid.Row="1" Margin="10"
+                 Background="{StaticResource AdditionalColor2}"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" ItemWidth="200" ItemHeight="280"
+                               HorizontalAlignment="Center" Margin="10"/>
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="{StaticResource PrimaryColor1}" BorderThickness="2" CornerRadius="10"
+                            Width="180" Height="260" Margin="10" Background="White"
+                            >
+                        <!-- Можно добавить DropShadowEffect в ресурсы окна -->
+                        <StackPanel>
+                            <Image Source="{Binding ImagePath}" Width="150" Height="120" Margin="5" Stretch="Uniform"
+                                   VerticalAlignment="Top"/>
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14" Margin="5,0"
+                                       TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="{Binding Price, StringFormat=N2}" FontSize="12" Margin="5,0"
+                                       TextAlignment="Center" Foreground="DarkGreen"/>
+                            <TextBlock Text="{Binding AvailableQuantity, StringFormat=На складе: {0} шт.}" FontSize="11" Margin="5,0"
+                                       TextAlignment="Center" Foreground="Gray"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="5,5,5,0">
+                                <TextBlock Text="Кол-во:" VerticalAlignment="Center" FontSize="12" Margin="0,0,5,0"/>
+                                <TextBox x:Name="txtItemQuantity" Text="{Binding SelectedQuantity, UpdateSourceTrigger=PropertyChanged}" 
+                                         Width="40" FontSize="14" TextAlignment="Center" VerticalAlignment="Center"
+                                         PreviewTextInput="TextBox_PreviewTextInput"/>
+                                <!-- Для ввода только чисел -->
+                            </StackPanel>
+                            <Button Content="➕ Добавить" 
+                                    Background="{StaticResource SuccessColor}" Foreground="{StaticResource TextWhite}"
+                                    Margin="5,5,5,0" Padding="5"
+                                    Click="BtnAddItemToSelection_Click"/>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Кнопки внизу -->
+        <Border Grid.Row="2" Background="{StaticResource PrimaryColor1}" Padding="10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="btnConfirmSelection" Content="✅ Подтвердить выбор"
+                        Background="{StaticResource SuccessColor}" Foreground="{StaticResource TextWhite}"
+                        FontSize="16" Padding="20,8" Margin="10,0"
+                        Click="BtnConfirmSelection_Click"/>
+                <Button x:Name="btnCancelSelection" Content="❌ Отмена"
+                        Background="Gray" Foreground="{StaticResource TextWhite}"
+                        FontSize="16" Padding="20,8" Margin="10,0"
+                        Click="BtnCancelSelection_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

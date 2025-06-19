@@ -33,7 +33,7 @@
                 <DataGridTextColumn Header="Номер заказа" Binding="{Binding OrderNumber}" Width="1*"/>
                 <DataGridTextColumn Header="Дата" Binding="{Binding OrderDate, StringFormat=dd.MM.yyyy}" Width="1*"/>
                 <DataGridTextColumn Header="Заказчик" Binding="{Binding CustomerLogin}" Width="2*"/>
-                <DataGridTextColumn Header="Сумма" Binding="{Binding TotalCost, StringFormat=C}" Width="1.5*"/>
+                <DataGridTextColumn Header="Сумма" Binding="{Binding TotalCost, StringFormat=N2}" Width="1.5*"/>
                 <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="1.5*"/>
                 <DataGridTextColumn Header="Менеджер" Binding="{Binding ManagerLogin}" Width="1.5*"/>
         

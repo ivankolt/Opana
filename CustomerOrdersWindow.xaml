@@ -66,7 +66,7 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Номер" Binding="{Binding OrderNumber}" Width="100"/>
                 <DataGridTextColumn Header="Дата" Binding="{Binding OrderDate, StringFormat=dd.MM.yyyy}" Width="120"/>
-                <DataGridTextColumn Header="Сумма" Binding="{Binding TotalCost, StringFormat=C}" Width="150"/>
+                <DataGridTextColumn Header="Сумма" Binding="{Binding TotalCost , StringFormat={}{0:N2} руб.}"  Width="150"/>
                 <DataGridTemplateColumn Header="Статус" Width="150">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

@@ -1,8 +1,10 @@
 ﻿using Npgsql;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 
 namespace UchPR
@@ -15,7 +17,7 @@ namespace UchPR
         private string currentStatus;
         private string managerLogin;
         private ObservableCollection<OrderItem> orderItems;
-
+        
         public ManagerOrderDetails(int orderNumber, DateTime orderDate, string managerLogin, string managerPassword)
         {
             InitializeComponent();
@@ -35,9 +37,23 @@ namespace UchPR
         {
             try
             {
-                // ... (код загрузки основной информации о заказе остается без изменений) ...
+                // Загрузка основной информации о заказе (включая статус)
+                string headerQuery = "SELECT execution_stage FROM orders WHERE number = @number AND date = @date";
+                var headerParams = new[] {
+    new NpgsqlParameter("@number", currentOrderNumber),
+    new NpgsqlParameter("@date", currentOrderDate)
+};
+                var headerData = database.GetData(headerQuery, headerParams);
 
-                // ИСПРАВЛЕННЫЙ ЗАПРОС для загрузки позиций заказа
+                if (headerData.Rows.Count > 0)
+                {
+                    currentStatus = headerData.Rows[0]["execution_stage"].ToString();
+                }
+                else
+                {
+                    currentStatus = "Новый"; // или выбросьте исключение, если это критично
+                }
+
                 string itemsQuery = @"
             SELECT 
                 op.product_article, 
@@ -77,52 +93,47 @@ namespace UchPR
             }
         }
 
-
         private void SetupManagerControls()
         {
+            // Кнопка "Далее" активна только если статус НЕ "Готов" и НЕ "К оплате"
+            btnNextStep.IsEnabled = currentStatus != "Готов" && currentStatus != "К оплате";
+            btnRejectOrder.IsEnabled = currentStatus != "Готов";
+
             switch (currentStatus)
             {
                 case "На проверке":
                     btnNextStep.Content = "✅ Подтвердить (к оплате)";
-                    btnNextStep.IsEnabled = true;
-                    btnRejectOrder.IsEnabled = true;
                     break;
                 case "К оплате":
                     btnNextStep.Content = "⏳ Ожидание оплаты";
-                    btnNextStep.IsEnabled = false;
-                    btnRejectOrder.IsEnabled = true;
                     break;
                 case "Оплачен":
                     btnNextStep.Content = "▶️ Начать производство";
-                    btnNextStep.IsEnabled = true;
-                    btnRejectOrder.IsEnabled = false; // Нельзя отклонить оплаченный заказ
                     break;
                 case "Обработка":
                     btnNextStep.Content = "✂️ В раскрой";
-                    btnNextStep.IsEnabled = true;
-                    btnRejectOrder.IsEnabled = false;
                     break;
                 case "Раскрой":
                     btnNextStep.Content = "⚙️ В производство";
-                    btnNextStep.IsEnabled = true;
-                    btnRejectOrder.IsEnabled = false;
                     break;
                 case "Производство":
                     btnNextStep.Content = "🏁 Завершить (Готов)";
-                    btnNextStep.IsEnabled = true;
-                    btnRejectOrder.IsEnabled = false;
                     break;
-                default: // Для статусов "Готов", "Отклонен"
+                case "Готов":
                     btnNextStep.Content = "✔️ Завершено";
-                    btnNextStep.IsEnabled = false;
-                    btnRejectOrder.IsEnabled = false;
+                    break;
+                default:
+                    btnNextStep.Content = "Далее";
                     break;
             }
         }
 
         private void BtnNextStep_Click(object sender, RoutedEventArgs e)
         {
-            string nextStatus = "";
+            // Определяем следующий статус
+            string nextStatus = null;
+
+            Console.WriteLine(currentStatus);
             switch (currentStatus)
             {
                 case "На проверке": nextStatus = "К оплате"; break;
@@ -132,7 +143,11 @@ namespace UchPR
                 case "Производство": nextStatus = "Готов"; break;
             }
 
-            if (string.IsNullOrEmpty(nextStatus)) return;
+            if (string.IsNullOrEmpty(nextStatus))
+            {
+                MessageBox.Show("Дальнейший переход невозможен. Заказ уже завершен или ожидает оплаты.");
+                return;
+            }
 
             using (var connection = new NpgsqlConnection(database.connectionString))
             {
@@ -141,19 +156,16 @@ namespace UchPR
                 {
                     try
                     {
-                        // Если заказ оплачен, списываем товары со склада ПЕРЕД сменой статуса
+                        // Если переход с "Оплачен" на "Обработка", списываем товары со склада
                         if (currentStatus == "Оплачен")
                         {
                             if (!DeductProductsFromWarehouse(connection, transaction))
-                            {
                                 throw new Exception("Не удалось списать товары со склада из-за нехватки остатков.");
-                            }
                         }
 
-                        // Обновляем статус заказа
                         UpdateOrderStatus(nextStatus, connection, transaction);
                         transaction.Commit();
-                        MessageBox.Show($"Статус заказа успешно обновлен на '{nextStatus}'.");
+                        MessageBox.Show($"Статус заказа обновлен на '{nextStatus}'.");
                         this.Close();
                     }
                     catch (Exception ex)
@@ -163,6 +175,14 @@ namespace UchPR
                     }
                 }
             }
+        }
+        private string GetNextStatus(string currentStatus)
+        {
+            string[] statusFlow = { "На проверке", "К оплате", "Оплачен", "Обработка", "Раскрой", "Производство", "Готов" };
+            int idx = Array.IndexOf(statusFlow, currentStatus);
+            if (idx >= 0 && idx + 1 < statusFlow.Length)
+                return statusFlow[idx + 1];
+            return null;
         }
 
         private void BtnRejectOrder_Click(object sender, RoutedEventArgs e)
@@ -242,6 +262,34 @@ namespace UchPR
                 new NpgsqlParameter("@date", currentOrderDate)
             });
             currentStatus = newStatus;
+        }
+    }
+    public class OrderItem : INotifyPropertyChanged
+    {
+        private int _quantity;
+
+        public string ProductArticle { get; set; }
+        public string ProductName { get; set; }
+        public decimal UnitPrice { get; set; }
+        public int AvailableQuantity { get; set; }
+
+        public int Quantity
+        {
+            get => _quantity;
+            set
+            {
+                _quantity = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(TotalPrice));
+            }
+        }
+
+        public decimal TotalPrice => Quantity * UnitPrice;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

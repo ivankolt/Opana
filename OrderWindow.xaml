@@ -1,12 +1,15 @@
 ﻿<Window x:Class="UchPR.OrderWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        mc:Ignorable="d"
         Title="Оформление заказа на текстильные изделия" Height="800" Width="1200"
-        WindowStartupLocation="CenterScreen"
-        Background="{StaticResource TextWhite}">
+        WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
+        <!-- Определение цветов, используемых в приложении -->
         <SolidColorBrush x:Key="PrimaryColor1" Color="#B5D5CA"/>
         <SolidColorBrush x:Key="PrimaryColor2" Color="#E0A9AF"/>
         <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
@@ -14,6 +17,24 @@
         <SolidColorBrush x:Key="AdditionalColor2" Color="#FFFCD6"/>
         <SolidColorBrush x:Key="SuccessColor" Color="#4CAF50"/>
         <SolidColorBrush x:Key="WarningColor" Color="#FF9800"/>
+        <SolidColorBrush x:Key="ErrorColor" Color="#FF6B6B"/>
+
+        <!-- Стили для DataGrid -->
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#E6EAF0"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="0,0,1,2"/>
+            <Setter Property="BorderBrush" Value="#DDE2E6"/>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -76,8 +97,9 @@
 
                 <TextBlock Grid.Column="2" Text="📅 Дата:" 
                            VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
+                <!-- Дата будет устанавливаться из кода C# -->
                 <TextBlock x:Name="txtOrderDate" Grid.Column="3" Margin="10,0,20,0" 
-           FontSize="14" Text="{Binding Source={x:Static sys:DateTime.Today}}"/>
+                           FontSize="14"/>
 
                 <TextBlock Grid.Column="4" Text="📊 Статус:" 
                            VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
@@ -86,39 +108,24 @@
             </Grid>
         </Border>
 
-        <!-- ======================= ДОБАВЛЕНИЕ ТОВАРОВ ======================= -->
+        <!-- ======================= ДОБАВЛЕНИЕ ТОВАРОВ (изменено) ======================= -->
         <Border Grid.Row="2" Background="{StaticResource TextWhite}" Padding="20,15" 
                 BorderBrush="{StaticResource PrimaryColor1}" BorderThickness="0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="400"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="🏷️ Выберите изделие:" 
-                           VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
-                <ComboBox x:Name="cbProducts" Grid.Column="1" 
-                         DisplayMemberPath="Name" SelectedValuePath="Article"
-                         FontSize="14" Height="35" Margin="15,0"
-                         SelectionChanged="CbProducts_SelectionChanged"/>
+                <!-- Кнопка для открытия окна выбора изделий -->
+                <Button x:Name="btnSelectProducts" Content="➕ Выбрать изделия из каталога" 
+                       Background="{StaticResource SuccessColor}" 
+                       Foreground="{StaticResource TextWhite}"
+                       FontSize="16" FontWeight="SemiBold" Padding="20,8" Margin="0,0,10,0"
+                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                       Click="BtnSelectProducts_Click"/>
 
-                <TextBlock Grid.Column="2" Text="📦 Количество:" 
-                           VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
-                <TextBox x:Name="txtQuantity" Grid.Column="3" 
-                        FontSize="16" Height="35" Margin="15,0" Text="1"
-                        HorizontalContentAlignment="Center"/>
-
-                <StackPanel Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="btnAddProduct" Content="➕ Добавить в заказ" 
-                           Background="{StaticResource SuccessColor}" 
-                           Foreground="{StaticResource TextWhite}"
-                           FontSize="14" FontWeight="SemiBold" Padding="20,8" Margin="10,0"
-                           Click="BtnAddProduct_Click"/>
-
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button x:Name="btnOpenConstructor" Content="🔧 Конструктор изделий" 
                            Background="{StaticResource WarningColor}" 
                            Foreground="{StaticResource TextWhite}"
@@ -132,28 +139,27 @@
         <DataGrid x:Name="dgOrderItems" Grid.Row="3" 
                  AutoGenerateColumns="False" CanUserAddRows="False"
                  AlternatingRowBackground="{StaticResource AdditionalColor2}"
-                 GridLinesVisibility="All" HeadersVisibility="Column"
-                 FontSize="14" RowHeight="40" Margin="20,10">
+                 GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#DDE2E6"
+                 FontSize="14" RowHeight="40" Margin="20,10"
+                 Background="{StaticResource TextWhite}">
+
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Артикул" Binding="{Binding ProductArticle}" 
-                                   Width="120" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Наименование изделия" Binding="{Binding ProductName}" 
-                                   Width="300" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" 
-                                   Width="100"/>
-                <DataGridTextColumn Header="Цена за ед." Binding="{Binding UnitPrice, StringFormat=C}" 
-                                   Width="120" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Стоимость" Binding="{Binding TotalPrice, StringFormat=C}" 
-                                   Width="150" IsReadOnly="True"/>
-                <DataGridTextColumn Header="На складе" Binding="{Binding AvailableQuantity}" 
-                                   Width="100" IsReadOnly="True"/>
-                <DataGridTemplateColumn Header="Действия" Width="120">
+                <DataGridTextColumn Header="Артикул" Binding="{Binding ProductArticle}" Width="120" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Наименование изделия" Binding="{Binding ProductName}" Width="300" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="100"/>
+
+                <!-- Формат цены с двумя знаками после запятой -->
+                <DataGridTextColumn Header="Цена за ед." Binding="{Binding UnitPrice, StringFormat=N2}" Width="120" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Стоимость" Binding="{Binding TotalPrice, StringFormat=N2}" Width="150" IsReadOnly="True"/>
+
+                <DataGridTextColumn Header="На складе" Binding="{Binding AvailableQuantity}" Width="100" IsReadOnly="True"/>
+                <DataGridTemplateColumn Header="Действия" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Content="🗑️ Удалить" 
-                                   Background="Red" Foreground="White"
-                                   FontSize="12" Padding="5,2"
-                                   Click="BtnRemoveItem_Click"/>
+                                    Background="{StaticResource ErrorColor}" Foreground="{StaticResource TextWhite}"
+                                    FontSize="12" Padding="5,2"
+                                    Click="BtnRemoveItem_Click"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -180,7 +186,7 @@
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="💰 ИТОГОВАЯ СТОИМОСТЬ:" FontWeight="Bold" FontSize="18"/>
-                    <TextBlock x:Name="txtTotalCost" Text="0,00 руб." FontWeight="Bold" 
+                    <TextBlock x:Name="txtTotalCost" Text="0,00" FontWeight="Bold" 
                               FontSize="20" Margin="15,0" Foreground="DarkGreen"/>
                 </StackPanel>
             </Grid>
@@ -189,6 +195,12 @@
         <!-- ======================= КНОПКИ ======================= -->
         <Border Grid.Row="5" Background="{StaticResource PrimaryColor1}" Padding="20,15">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <!-- Кнопка оплаты (изначально скрыта) -->
+                <Button x:Name="btnPayForOrder" Content="💳 Оплатить заказ" 
+                        Background="DarkBlue" Foreground="{StaticResource TextWhite}"
+                        FontSize="16" FontWeight="Bold" Padding="30,10" Margin="10,0"
+                        Click="BtnPayForOrder_Click" Visibility="Collapsed"/>
+
                 <Button x:Name="btnSaveOrder" Content="💾 Сохранить заказ" 
                        Background="{StaticResource SuccessColor}" 
                        Foreground="{StaticResource TextWhite}"
@@ -200,11 +212,6 @@
                        Foreground="{StaticResource TextWhite}"
                        FontSize="16" FontWeight="Bold" Padding="30,10" Margin="10,0"
                        Click="BtnSubmitOrder_Click"/>
-
-                <Button x:Name="btnPayForOrder" Content="💳 Оплатить заказ" 
-                Background="DarkBlue" Foreground="White"
-                FontSize="16" FontWeight="Bold" Padding="30,10" Margin="10,0"
-                Click="BtnPayForOrder_Click" Visibility="Collapsed"/>
 
                 <Button x:Name="btnCancel" Content="❌ Отмена" 
                        Background="Gray" 

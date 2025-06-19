@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
@@ -6,164 +7,98 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using Npgsql;
 
 namespace UchPR
 {
     public partial class OrderWindow : Window
     {
+        #region Поля и свойства
         private DataBase database;
         private ObservableCollection<OrderItem> orderItems;
-        private ObservableCollection<CatalogProductItem> availableProducts;
         private string currentUserLogin;
         private string currentUserRole;
         private int? currentOrderNumber;
         private DateTime currentOrderDate;
         private string currentStatus;
+        #endregion
 
-        private readonly IUserSessionService _userSessionService;
-
-        public OrderWindow(string userLogin, string userRole, IUserSessionService userSessionService = null)
+        #region Конструктор и инициализация
+        public OrderWindow(string userLogin, string userRole)
         {
             InitializeComponent();
             database = new DataBase();
             currentUserLogin = userLogin;
             currentUserRole = userRole;
             currentOrderDate = DateTime.Today;
-            _userSessionService = userSessionService ?? new UserSessionService();
 
             orderItems = new ObservableCollection<OrderItem>();
-            availableProducts = new ObservableCollection<CatalogProductItem>();
-
             dgOrderItems.ItemsSource = orderItems;
-            cbProducts.ItemsSource = availableProducts;
 
             txtCurrentUser.Text = $"{userLogin} ({userRole})";
+            txtOrderDate.Text = DateTime.Today.ToString("dd.MM.yyyy");
 
-            LoadAvailableProducts();
+            // Если открывается существующий заказ, здесь будет логика его загрузки,
+            // которая установит currentOrderNumber и currentStatus.
+            // Например: LoadExistingOrder(orderId);
+
             UpdateTotals();
-            SetupCustomerControls();
-
-            // Подписка на изменения в заказе
+            SetupCustomerControls(); // Управляем видимостью кнопок
             orderItems.CollectionChanged += (s, e) => UpdateTotals();
         }
+
+        // Метод для управления видимостью и доступностью кнопок в зависимости от статуса заказа
         private void SetupCustomerControls()
         {
-            // Клиент может редактировать заказ только если он новый
+            // Редактировать заказ можно только если он "Новый" или еще не сохранен
             bool isEditable = (currentStatus == "Новый" || string.IsNullOrEmpty(currentStatus));
 
             dgOrderItems.IsReadOnly = !isEditable;
-            cbProducts.IsEnabled = isEditable;
-            txtQuantity.IsEnabled = isEditable;
-            btnAddProduct.IsEnabled = isEditable;
+            btnSelectProducts.IsEnabled = isEditable;
+            btnOpenConstructor.IsEnabled = isEditable;
             btnSaveOrder.Visibility = isEditable ? Visibility.Visible : Visibility.Collapsed;
             btnSubmitOrder.Visibility = isEditable ? Visibility.Visible : Visibility.Collapsed;
 
             // Кнопка оплаты видна, только когда заказ имеет статус "К оплате"
             btnPayForOrder.Visibility = (currentStatus == "К оплате") ? Visibility.Visible : Visibility.Collapsed;
         }
+        #endregion
 
-        private void LoadAvailableProducts()
+        #region Обработчики событий UI
+        // НОВЫЙ МЕТОД: Открывает окно выбора изделий
+        private void BtnSelectProducts_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // ИСПРАВЛЕННЫЙ ЗАПРОС:
-                // - Используем JOIN для получения только тех товаров, что есть на складе.
-                // - Рассчитываем среднюю себестоимость (AVG) из productwarehouse.
-                string query = @"
-            SELECT 
-                p.article,
-                pn.name,
-                AVG(pw.production_cost) AS price,
-                SUM(pw.quantity) AS available_quantity
-            FROM product p
-            JOIN productname pn ON p.name_id = pn.id
-            JOIN productwarehouse pw ON p.article = pw.product_article
-            GROUP BY p.article, pn.name
-            HAVING SUM(pw.quantity) > 0
-            ORDER BY pn.name";
-
-                var data = database.GetData(query);
-                availableProducts.Clear();
-
-                foreach (DataRow row in data.Rows)
+                var productSelectionWindow = new ProductSelectionWindow();
+                if (productSelectionWindow.ShowDialog() == true)
                 {
-                    availableProducts.Add(new CatalogProductItem
+                    // Добавляем выбранные товары в текущий заказ
+                    foreach (var selectedItem in productSelectionWindow.SelectedOrderItems)
                     {
-                        Article = row["article"].ToString(),
-                        Name = $"Арт. {row["article"]} - {row["name"]}",
-                        // Теперь цена берется из рассчитанного среднего значения
-                        Price = SafeDataReader.GetSafeDecimal(row, "price"),
-                        AvailableQuantity = SafeDataReader.GetSafeInt32(row, "available_quantity")
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка загрузки товаров: {ex.Message}");
-            }
-        }
-
-        private void CbProducts_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (cbProducts.SelectedItem is CatalogProductItem product)
-            {
-                // Автоматически устанавливаем количество 1
-                txtQuantity.Text = "1";
-            }
-        }
-
-        private void BtnAddProduct_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (cbProducts.SelectedItem is CatalogProductItem selectedProduct)
-                {
-                    if (!int.TryParse(txtQuantity.Text, out int quantity) || quantity <= 0)
-                    {
-                        MessageBox.Show("Введите корректное количество", "Ошибка",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-
-                    if (quantity > selectedProduct.AvailableQuantity)
-                    {
-                        MessageBox.Show($"На складе доступно только {selectedProduct.AvailableQuantity} шт.",
-                            "Недостаточно товара", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-
-                    // Проверяем, есть ли уже такой товар в заказе
-                    var existingItem = orderItems.FirstOrDefault(x => x.ProductArticle == selectedProduct.Article);
-                    if (existingItem != null)
-                    {
-                        existingItem.Quantity += quantity;
-                    }
-                    else
-                    {
-                        orderItems.Add(new OrderItem
+                        var existingItem = orderItems.FirstOrDefault(oi => oi.ProductArticle == selectedItem.ProductArticle);
+                        if (existingItem != null)
                         {
-                            ProductArticle = selectedProduct.Article,
-                            ProductName = selectedProduct.Name,
-                            Quantity = quantity,
-                            UnitPrice = selectedProduct.Price,
-                            AvailableQuantity = selectedProduct.AvailableQuantity
-                        });
-                    }
 
-                    // Сбрасываем выбор
-                    cbProducts.SelectedIndex = -1;
-                    txtQuantity.Text = "1";
-                }
-                else
-                {
-                    MessageBox.Show("Выберите изделие для добавления", "Ошибка",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                            existingItem.Quantity += selectedItem.Quantity;
+                        }
+                        else
+                        {
+                            if (selectedItem.Quantity > selectedItem.AvailableQuantity)
+                            {
+                                MessageBox.Show("Нельзя добавить больше, чем есть на складе.");
+                            }
+                            else
+                            {
+                                orderItems.Add(selectedItem);
+                            }
+
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка добавления товара: {ex.Message}");
+                MessageBox.Show($"Ошибка выбора товаров: {ex.Message}");
             }
         }
 
@@ -179,14 +114,11 @@ namespace UchPR
         {
             try
             {
-                string userLogin = GetCurrentUserLogin(); // Реализуйте этот метод
-                string userPassword = GetCurrentUserPassword(); //
-                var constructorWindow = new ProductDesignerWindow(userLogin, userPassword);
+                // Для конструктора нужно передать данные текущего пользователя
+                var constructorWindow = new ProductDesignerWindow(currentUserLogin, GetUserPassword(currentUserLogin));
                 if (constructorWindow.ShowDialog() == true)
                 {
-                    // После создания изделия в конструкторе, обновляем список доступных товаров
-                    LoadAvailableProducts();
-                    MessageBox.Show("Изделие создано! Теперь вы можете добавить его в заказ.",
+                    MessageBox.Show("Изделие создано! Теперь вы можете добавить его в заказ через каталог.",
                         "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -196,28 +128,6 @@ namespace UchPR
             }
         }
 
-        private string GetCurrentUserLogin()
-        {
-            return _userSessionService.GetCurrentUserLogin();
-        }
-
-        private string GetCurrentUserPassword()
-        {
-            return _userSessionService.GetCurrentUserPassword();
-        }
-
-
-        private void UpdateTotals()
-        {
-            int itemCount = orderItems.Count;
-            int totalQuantity = orderItems.Sum(x => x.Quantity);
-            decimal totalCost = orderItems.Sum(x => x.TotalPrice);
-
-            txtItemCount.Text = itemCount.ToString();
-            txtTotalQuantity.Text = totalQuantity.ToString();
-            txtTotalCost.Text = $"{totalCost:N2} руб.";
-        }
-
         private void BtnSaveOrder_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -225,8 +135,7 @@ namespace UchPR
                 if (ValidateOrder())
                 {
                     SaveOrder("Новый");
-                    MessageBox.Show("Заказ сохранен", "Успех",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Заказ сохранен как черновик.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
@@ -247,8 +156,7 @@ namespace UchPR
                     if (result == MessageBoxResult.Yes)
                     {
                         SaveOrder("На проверке");
-                        MessageBox.Show("Заказ отправлен на проверку менеджеру", "Успех",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show("Заказ отправлен на проверку менеджеру.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                         this.Close();
                     }
                 }
@@ -261,41 +169,60 @@ namespace UchPR
 
         private void BtnPayForOrder_Click(object sender, RoutedEventArgs e)
         {
-            // Имитация оплаты: просто меняем статус заказа
             UpdateOrderStatus("Оплачен");
-            MessageBox.Show("Заказ успешно оплачен и будет передан в производство.");
+            MessageBox.Show("Заказ успешно оплачен и скоро будет передан в производство.", "Оплата прошла", MessageBoxButton.OK, MessageBoxImage.Information);
             this.Close();
+        }
+
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+        #endregion
+
+        #region Вспомогательные методы
+        private void UpdateTotals()
+        {
+            int itemCount = orderItems.Count;
+            int totalQuantity = orderItems.Sum(x => x.Quantity);
+            decimal totalCost = orderItems.Sum(x => x.TotalPrice);
+
+            txtItemCount.Text = itemCount.ToString();
+            txtTotalQuantity.Text = totalQuantity.ToString();
+            txtTotalCost.Text = $"{totalCost:N2}"; // Формат без символа валюты
         }
 
         private void UpdateOrderStatus(string newStatus)
         {
-            // Метод для обновления статуса заказа в БД...
-            // ...
-            currentStatus = newStatus;
-            SetupCustomerControls(); // Обновляем интерфейс
+            if (currentOrderNumber.HasValue)
+            {
+                string query = "UPDATE orders SET execution_stage = @status::order_status WHERE number = @number AND date = @date";
+                database.ExecuteNonQuery(query, new[] {
+                    new NpgsqlParameter("@status", newStatus),
+                    new NpgsqlParameter("@number", currentOrderNumber.Value),
+                    new NpgsqlParameter("@date", currentOrderDate)
+                });
+                currentStatus = newStatus;
+                SetupCustomerControls(); // Обновляем интерфейс
+            }
         }
 
         private bool ValidateOrder()
         {
             if (orderItems.Count == 0)
             {
-                MessageBox.Show("Добавьте хотя бы одно изделие в заказ", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Добавьте хотя бы одно изделие в заказ.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            // Проверяем наличие товаров на складе
             foreach (var item in orderItems)
             {
-                var product = availableProducts.FirstOrDefault(p => p.Article == item.ProductArticle);
-                if (product == null || item.Quantity > product.AvailableQuantity)
+                if (item.Quantity > item.AvailableQuantity)
                 {
-                    MessageBox.Show($"Недостаточно товара на складе: {item.ProductName}",
-                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"Недостаточно товара на складе для '{item.ProductName}'.\nТребуется: {item.Quantity}, в наличии: {item.AvailableQuantity}.", "Нехватка товара", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
                 }
             }
-
             return true;
         }
 
@@ -309,8 +236,6 @@ namespace UchPR
                     try
                     {
                         decimal totalCost = orderItems.Sum(x => x.TotalPrice);
-
-                        // Получаем пароль пользователя
                         string userPassword = GetUserPassword(currentUserLogin, connection, transaction);
 
                         if (currentOrderNumber == null)
@@ -335,47 +260,35 @@ namespace UchPR
                         {
                             // Обновляем существующий заказ
                             string updateOrderQuery = @"
-                                UPDATE orders 
-                                SET execution_stage = @status::order_status, cost = @cost
+                                UPDATE orders SET execution_stage = @status::order_status, cost = @cost
                                 WHERE number = @number AND date = @date";
+                            database.ExecuteNonQueryWithTransaction(updateOrderQuery, connection, transaction, new[] {
+                                new NpgsqlParameter("@status", status),
+                                new NpgsqlParameter("@cost", totalCost),
+                                new NpgsqlParameter("@number", currentOrderNumber.Value),
+                                new NpgsqlParameter("@date", currentOrderDate)
+                            });
 
-                            using (var cmd = new NpgsqlCommand(updateOrderQuery, connection, transaction))
-                            {
-                                cmd.Parameters.AddWithValue("@status", status);
-                                cmd.Parameters.AddWithValue("@cost", totalCost);
-                                cmd.Parameters.AddWithValue("@number", currentOrderNumber);
-                                cmd.Parameters.AddWithValue("@date", currentOrderDate);
-                                cmd.ExecuteNonQuery();
-                            }
-
-                            // Удаляем старые позиции заказа
-                            string deleteItemsQuery = @"
-                                DELETE FROM orderedproducts 
-                                WHERE order_number = @number AND order_date = @date";
-
-                            using (var cmd = new NpgsqlCommand(deleteItemsQuery, connection, transaction))
-                            {
-                                cmd.Parameters.AddWithValue("@number", currentOrderNumber);
-                                cmd.Parameters.AddWithValue("@date", currentOrderDate);
-                                cmd.ExecuteNonQuery();
-                            }
+                            // Удаляем старые позиции заказа, чтобы перезаписать новыми
+                            string deleteItemsQuery = "DELETE FROM orderedproducts WHERE order_number = @number AND order_date = @date";
+                            database.ExecuteNonQueryWithTransaction(deleteItemsQuery, connection, transaction, new[] {
+                                new NpgsqlParameter("@number", currentOrderNumber.Value),
+                                new NpgsqlParameter("@date", currentOrderDate)
+                            });
                         }
 
-                        // Сохраняем позиции заказа
+                        // Сохраняем актуальные позиции заказа
                         foreach (var item in orderItems)
                         {
                             string insertItemQuery = @"
                                 INSERT INTO orderedproducts (order_number, order_date, product_article, quantity)
                                 VALUES (@order_number, @order_date, @product_article, @quantity)";
-
-                            using (var cmd = new NpgsqlCommand(insertItemQuery, connection, transaction))
-                            {
-                                cmd.Parameters.AddWithValue("@order_number", currentOrderNumber);
-                                cmd.Parameters.AddWithValue("@order_date", currentOrderDate);
-                                cmd.Parameters.AddWithValue("@product_article", item.ProductArticle);
-                                cmd.Parameters.AddWithValue("@quantity", item.Quantity);
-                                cmd.ExecuteNonQuery();
-                            }
+                            database.ExecuteNonQueryWithTransaction(insertItemQuery, connection, transaction, new[] {
+                                new NpgsqlParameter("@order_number", currentOrderNumber.Value),
+                                new NpgsqlParameter("@order_date", currentOrderDate),
+                                new NpgsqlParameter("@product_article", item.ProductArticle),
+                                new NpgsqlParameter("@quantity", item.Quantity)
+                            });
                         }
 
                         transaction.Commit();
@@ -383,6 +296,8 @@ namespace UchPR
                         // Обновляем интерфейс
                         txtOrderNumber.Text = currentOrderNumber.ToString();
                         txtOrderStatus.Text = status;
+                        currentStatus = status;
+                        SetupCustomerControls();
                     }
                     catch
                     {
@@ -393,58 +308,20 @@ namespace UchPR
             }
         }
 
-        private string GetUserPassword(string login, NpgsqlConnection connection, NpgsqlTransaction transaction)
+        private string GetUserPassword(string login, NpgsqlConnection connection = null, NpgsqlTransaction transaction = null)
         {
             string query = "SELECT password FROM users WHERE login = @login";
-            using (var cmd = new NpgsqlCommand(query, connection, transaction))
+            if (connection != null && transaction != null)
             {
-                cmd.Parameters.AddWithValue("@login", login);
-                return cmd.ExecuteScalar()?.ToString() ?? "";
+                return database.ExecuteScalarWithTransaction(query, connection, transaction, new[] { new NpgsqlParameter("@login", login) })?.ToString() ?? "";
+            }
+            else
+            {
+                return database.ExecuteScalar(query, new[] { new NpgsqlParameter("@login", login) })?.ToString() ?? "";
             }
         }
+        #endregion
 
-        private void BtnCancel_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
     }
-
-    #region Модели данных
-    public class CatalogProductItem
-    {
-        public string Article { get; set; }
-        public string Name { get; set; }
-        public decimal Price { get; set; }
-        public int AvailableQuantity { get; set; }
-    }
-    public class OrderItem : INotifyPropertyChanged
-    {
-        private int _quantity;
-
-        public string ProductArticle { get; set; }
-        public string ProductName { get; set; }
-        public decimal UnitPrice { get; set; }
-        public int AvailableQuantity { get; set; }
-
-        public int Quantity
-        {
-            get => _quantity;
-            set
-            {
-                _quantity = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(TotalPrice));
-            }
-        }
-
-        public decimal TotalPrice => Quantity * UnitPrice;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }
-
-    #endregion
+     
 }
