@@ -114,6 +114,9 @@
     <Compile Include="CustomerOrdersWindow.xaml.cs">
       <DependentUpon>CustomerOrdersWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CuttingWindow.xaml.cs">
+      <DependentUpon>CuttingWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DocumentHistoryItem.cs" />
     <Compile Include="DocumentHistoryRepository.cs" />
     <Compile Include="DocumentHistoryWindow.xaml.cs">
@@ -181,6 +184,9 @@
       <DependentUpon>ThresholdSettingsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserSessionService.cs" />
+    <Compile Include="ViewCutsWindow.xaml.cs">
+      <DependentUpon>ViewCutsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WarehousePage.xaml.cs">
       <DependentUpon>WarehousePage.xaml</DependentUpon>
     </Compile>
@@ -193,6 +199,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="CustomerOrdersWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CuttingWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -285,6 +295,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ThresholdSettingsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ViewCutsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

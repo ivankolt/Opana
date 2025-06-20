@@ -20,6 +20,7 @@ namespace UchPR
         private int? currentOrderNumber;
         private DateTime currentOrderDate;
         private string currentStatus;
+
         #endregion
 
         #region Конструктор и инициализация
@@ -72,13 +73,11 @@ namespace UchPR
                 var productSelectionWindow = new ProductSelectionWindow();
                 if (productSelectionWindow.ShowDialog() == true)
                 {
-                    // Добавляем выбранные товары в текущий заказ
                     foreach (var selectedItem in productSelectionWindow.SelectedOrderItems)
                     {
                         var existingItem = orderItems.FirstOrDefault(oi => oi.ProductArticle == selectedItem.ProductArticle);
                         if (existingItem != null)
                         {
-
                             existingItem.Quantity += selectedItem.Quantity;
                         }
                         else
@@ -89,11 +88,20 @@ namespace UchPR
                             }
                             else
                             {
+                                // --- ДОБАВЛЯЕМ ЗДЕСЬ ---
+                                // Получаем размеры изделия из БД
+                                string query = "SELECT width, length FROM product WHERE article = @article";
+                                var dt = database.GetData(query, new[] { new NpgsqlParameter("@article", selectedItem.ProductArticle) });
+                                if (dt.Rows.Count > 0)
+                                {
+                                    selectedItem.Width = SafeDataReader.GetSafeDecimal(dt.Rows[0], "width");
+                                    selectedItem.Length = SafeDataReader.GetSafeDecimal(dt.Rows[0], "length");
+                                }
                                 orderItems.Add(selectedItem);
                             }
-
                         }
                     }
+                    UpdateTotals();
                 }
             }
             catch (Exception ex)
@@ -157,6 +165,10 @@ namespace UchPR
                     {
                         SaveOrder("На проверке");
                         MessageBox.Show("Заказ отправлен на проверку менеджеру.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        int orderNumber = currentOrderNumber ?? 0;
+                        var cuttingWindow = new CuttingWindow(orderNumber, currentOrderDate, orderItems.ToList());
+                        cuttingWindow.ShowDialog();
                         this.Close();
                     }
                 }
@@ -305,6 +317,47 @@ namespace UchPR
                         throw;
                     }
                 }
+            }
+        }
+
+        private void LoadOrderItems()
+        {
+            if (currentOrderNumber == null)
+                return;
+
+            string itemsQuery = @"
+        SELECT 
+            op.product_article, 
+            pn.name as product_name, 
+            op.quantity, 
+            COALESCE((SELECT AVG(pw.production_cost) 
+                      FROM productwarehouse pw 
+                      WHERE pw.product_article = op.product_article), 0) as unit_price,
+            p.width,
+            p.length
+        FROM orderedproducts op
+        JOIN product p ON op.product_article = p.article
+        JOIN productname pn ON p.name_id = pn.id
+        WHERE op.order_number = @number AND op.order_date = @date";
+
+            var itemsParams = new[] {
+        new NpgsqlParameter("@number", currentOrderNumber.Value),
+        new NpgsqlParameter("@date", currentOrderDate)
+    };
+            var itemsData = database.GetData(itemsQuery, itemsParams);
+            orderItems.Clear();
+
+            foreach (DataRow row in itemsData.Rows)
+            {
+                orderItems.Add(new OrderItem
+                {
+                    ProductArticle = row["product_article"].ToString(),
+                    ProductName = row["product_name"].ToString(),
+                    Quantity = (int)row["quantity"],
+                    UnitPrice = SafeDataReader.GetSafeDecimal(row, "unit_price"),
+                    Width = SafeDataReader.GetSafeDecimal(row, "width"),
+                    Length = SafeDataReader.GetSafeDecimal(row, "length")
+                });
             }
         }
 

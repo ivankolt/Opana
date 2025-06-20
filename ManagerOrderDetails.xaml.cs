@@ -62,7 +62,9 @@ namespace UchPR
                 -- Расчет средней себестоимости со склада как цены за единицу
                 COALESCE((SELECT AVG(pw.production_cost) 
                           FROM productwarehouse pw 
-                          WHERE pw.product_article = op.product_article), 0) as unit_price
+                          WHERE pw.product_article = op.product_article), 0) as unit_price,
+            p.width,
+            p.length
             FROM orderedproducts op
             JOIN product p ON op.product_article = p.article
             JOIN productname pn ON p.name_id = pn.id
@@ -83,7 +85,9 @@ namespace UchPR
                         ProductName = row["product_name"].ToString(),
                         Quantity = (int)row["quantity"],
                         // Теперь цена подставляется корректно
-                        UnitPrice = SafeDataReader.GetSafeDecimal(row, "unit_price")
+                        UnitPrice = SafeDataReader.GetSafeDecimal(row, "unit_price"),
+                         Width = SafeDataReader.GetSafeDecimal(row, "width"),
+        Length = SafeDataReader.GetSafeDecimal(row, "length")
                     });
                 }
             }
@@ -147,6 +151,17 @@ namespace UchPR
             {
                 MessageBox.Show("Дальнейший переход невозможен. Заказ уже завершен или ожидает оплаты.");
                 return;
+            }
+
+            if (nextStatus == "Раскрой")
+            {
+                // Передаём номер заказа, дату и список изделий
+                var cuttingWindow = new CuttingWindow(currentOrderNumber, currentOrderDate, orderItems.ToList());
+                cuttingWindow.ShowDialog();
+
+                // После закрытия окна раскроя можно обновить статус, если нужно
+                // UpdateOrderStatus("Раскрой", ...);
+                // return; // или продолжить, если статус должен меняться после раскроя
             }
 
             using (var connection = new NpgsqlConnection(database.connectionString))
@@ -267,6 +282,8 @@ namespace UchPR
     public class OrderItem : INotifyPropertyChanged
     {
         private int _quantity;
+        public decimal Width { get; set; }
+        public decimal Length { get; set; }
 
         public string ProductArticle { get; set; }
         public string ProductName { get; set; }
