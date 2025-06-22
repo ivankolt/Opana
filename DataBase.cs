@@ -432,101 +432,119 @@
                 return items;
             }
 
-            // File: DataBase.cs
-            public bool UpdateScrapThreshold(int article, decimal threshold, string materialType)
+        // File: DataBase.cs
+        public bool UpdateProductScrapThreshold(string article, decimal threshold)
+        {
+            string sql = "UPDATE product SET scrap_threshold = @threshold WHERE article = @article";
+            try
             {
-                string sql = materialType == "Fabric"
-                    ? "UPDATE Fabric SET scrap_threshold = @threshold WHERE article = @article"
-                    : "UPDATE Accessory SET scrap_threshold = @threshold WHERE article = @article";
-
-                try
+                using (var conn = new NpgsqlConnection(connectionString))
                 {
-                    using (var conn = new NpgsqlConnection(connectionString))
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand(sql, conn))
                     {
-                        conn.Open();
-                        using (var cmd = new NpgsqlCommand(sql, conn))
-                        {
-                            // Теперь оба параметра имеют правильные типы
-                            cmd.Parameters.Add("threshold", NpgsqlDbType.Integer).Value = (int)Math.Round(threshold);
-                            cmd.Parameters.Add("article", NpgsqlDbType.Integer).Value = article; // Теперь article уже int
-
-                            int rowsAffected = cmd.ExecuteNonQuery();
-                            return rowsAffected > 0;
-                        }
+                        cmd.Parameters.AddWithValue("threshold", threshold);
+                        cmd.Parameters.AddWithValue("article", article);
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        return rowsAffected > 0;
                     }
                 }
-                catch (NpgsqlException ex)
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении порога списания для изделия {article}: {ex.Message}");
+                return false;
+            }
+        }
+        public List<ProductThresholdSettingsItem> GetProductsForThresholdSettings()
+        {
+            var items = new List<ProductThresholdSettingsItem>();
+            string sql = @"
+        SELECT p.article, pn.name AS ProductName, 
+               COALESCE(p.scrap_threshold, 0) AS ScrapThreshold,
+               u.name AS UnitName
+        FROM product p
+        JOIN productname pn ON p.name_id = pn.id
+        JOIN unitofmeasurement u ON p.unit_of_measurement_id = u.code
+        ORDER BY pn.name";
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                using (var reader = cmd.ExecuteReader())
                 {
-                    MessageBox.Show($"Ошибка при сохранении порога списания для артикула {article}: {ex.Message}");
-                    return false;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Общая ошибка при сохранении: {ex.Message}");
-                    return false;
+                    while (reader.Read())
+                    {
+                        items.Add(new ProductThresholdSettingsItem
+                        {
+                            Article = reader.GetString(0),
+                            ProductName = reader.GetString(1),
+                            ScrapThreshold = reader.GetDecimal(2),
+                            UnitName = reader.GetString(3)
+                        });
+                    }
                 }
             }
+            return items;
+        }
 
-            public List<ScrapLogItem> GetScrapLog(DateTime? fromDate = null, DateTime? toDate = null)
+
+        public List<ScrapLogItem> GetScrapLog(DateTime? fromDate = null, DateTime? toDate = null)
+        {
+            var logItems = new List<ScrapLogItem>();
+            string sql = @"
+        SELECT sl.log_date, sl.material_article, sl.quantity_scrapped, 
+               sl.cost_scrapped, u.name AS UnitName,
+               COALESCE(sl.written_off_by, 'Система') AS WrittenOffBy,
+               pn.name AS ProductName
+        FROM scraplog sl
+        JOIN unitofmeasurement u ON sl.unit_of_measurement_id = u.code
+        LEFT JOIN product p ON p.article = sl.material_article
+        LEFT JOIN productname pn ON p.name_id = pn.id
+        WHERE (@fromDate IS NULL OR sl.log_date >= @fromDate)
+          AND (@toDate IS NULL OR sl.log_date <= @toDate)
+        ORDER BY sl.log_date DESC;";
+
+            try
             {
-                var logItems = new List<ScrapLogItem>();
-                string sql = @"
-            SELECT sl.log_date, sl.material_article, sl.quantity_scrapped, 
-                   sl.cost_scrapped, u.name AS UnitName,
-                   COALESCE(sl.written_off_by, 'Система') AS WrittenOffBy,
-                   CASE 
-                       WHEN EXISTS(SELECT 1 FROM Fabric WHERE article::TEXT = sl.material_article) 
-                       THEN (SELECT fn.name FROM Fabric f 
-                             JOIN FabricName fn ON f.name_id = fn.code 
-                             WHERE f.article::TEXT = sl.material_article)
-                       ELSE (SELECT fan.name FROM Accessory a 
-                             JOIN FurnitureAccessoryName fan ON a.name_id = fan.id 
-                             WHERE a.article::TEXT = sl.material_article)
-                   END AS MaterialName
-            FROM ScrapLog sl
-            JOIN UnitOfMeasurement u ON sl.unit_of_measurement_id = u.code
-            WHERE (@fromDate IS NULL OR sl.log_date >= @fromDate)
-              AND (@toDate IS NULL OR sl.log_date <= @toDate)
-            ORDER BY sl.log_date DESC;";
-
-                try
+                using (var conn = new NpgsqlConnection(connectionString))
                 {
-                    using (var conn = new NpgsqlConnection(connectionString))
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand(sql, conn))
                     {
-                        conn.Open();
-                        using (var cmd = new NpgsqlCommand(sql, conn))
-                        {
-                            cmd.Parameters.AddWithValue("fromDate", (object)fromDate ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("toDate", (object)toDate ?? DBNull.Value);
+                        cmd.Parameters.Add("fromDate", NpgsqlTypes.NpgsqlDbType.Timestamp);
+                        cmd.Parameters.Add("toDate", NpgsqlTypes.NpgsqlDbType.Timestamp);
 
-                            using (var reader = cmd.ExecuteReader())
+                        cmd.Parameters["fromDate"].Value = (object)fromDate ?? DBNull.Value;
+                        cmd.Parameters["toDate"].Value = (object)toDate ?? DBNull.Value;
+
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
                             {
-                                while (reader.Read())
+                                logItems.Add(new ScrapLogItem
                                 {
-                                    logItems.Add(new ScrapLogItem
-                                    {
-                                        LogDate = reader.GetDateTime(0),                    // log_date
-                                        MaterialArticle = reader.GetString(1),             // material_article
-                                        QuantityScrap = reader.GetDecimal(2),              // quantity_scrapped
-                                        CostScrap = reader.GetDecimal(3),                  // cost_scrapped
-                                        UnitName = reader.GetString(4),                    // UnitName
-                                        WrittenOffBy = reader.GetString(5),                // WrittenOffBy
-                                        MaterialName = reader.IsDBNull(6) ? "Неизвестно" : reader.GetString(6) // MaterialName
-                                    });
-                                }
+                                    LogDate = reader.GetDateTime(0),
+                                    MaterialArticle = reader.GetString(1),
+                                    QuantityScrap = reader.GetDecimal(2),
+                                    CostScrap = reader.GetDecimal(3),
+                                    UnitName = reader.GetString(4),
+                                    WrittenOffBy = reader.GetString(5),
+                                    MaterialName = reader.IsDBNull(6) ? "Неизвестно" : reader.GetString(6)
+                                });
                             }
                         }
                     }
                 }
-                catch (NpgsqlException ex)
-                {
-                    MessageBox.Show("Ошибка при получении журнала списаний: " + ex.Message);
-                }
-                return logItems;
             }
+            catch (NpgsqlException ex)
+            {
+                MessageBox.Show("Ошибка при получении журнала списаний: " + ex.Message);
+            }
+            return logItems;
+        }
 
-
-            public DataTable GetData(string query, NpgsqlParameter[] parameters = null)
+        public DataTable GetData(string query, NpgsqlParameter[] parameters = null)
             {
                 DataTable dataTable = new DataTable();
 

@@ -1,5 +1,4 @@
-﻿// File: ThresholdSettingsWindow.xaml.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -9,19 +8,17 @@ namespace UchPR
     public partial class ThresholdSettingsWindow : Window
     {
         private readonly DataBase db = new DataBase();
-        private readonly string materialType;
-        private List<ThresholdSettingsItem> thresholds;
+        private List<ProductThresholdSettingsItem> thresholds;
 
-        public ThresholdSettingsWindow(string materialType)
+        public ThresholdSettingsWindow()
         {
             InitializeComponent();
-            this.materialType = materialType;
             LoadThresholds();
         }
 
         private void LoadThresholds()
         {
-            thresholds = db.GetMaterialsForThresholdSettings(materialType);
+            thresholds = db.GetProductsForThresholdSettings();
             dgThresholds.ItemsSource = thresholds;
         }
 
@@ -34,23 +31,22 @@ namespace UchPR
             {
                 try
                 {
-                    // Проверяем корректность введенного значения
                     if (item.ScrapThreshold < 0)
                     {
-                        errorMessages.Add($"Материал {item.MaterialName}: порог не может быть отрицательным");
+                        errorMessages.Add($"Изделие {item.ProductName}: порог не может быть отрицательным");
                         hasErrors = true;
                         continue;
                     }
 
-                    if (!db.UpdateScrapThreshold(item.Article, item.ScrapThreshold, materialType))
+                    if (!db.UpdateProductScrapThreshold(item.Article, item.ScrapThreshold))
                     {
-                        errorMessages.Add($"Не удалось сохранить настройки для материала {item.MaterialName}");
+                        errorMessages.Add($"Не удалось сохранить настройки для изделия {item.ProductName}");
                         hasErrors = true;
                     }
                 }
                 catch (Exception ex)
                 {
-                    errorMessages.Add($"Ошибка при сохранении {item.MaterialName}: {ex.Message}");
+                    errorMessages.Add($"Ошибка при сохранении {item.ProductName}: {ex.Message}");
                     hasErrors = true;
                 }
             }
@@ -73,5 +69,14 @@ namespace UchPR
         {
             this.Close();
         }
+    }
+
+    // Пример модели для DataGrid
+    public class ProductThresholdSettingsItem
+    {
+        public string ProductName { get; set; }
+        public string Article { get; set; }
+        public decimal ScrapThreshold { get; set; }
+        public string UnitName { get; set; }
     }
 }

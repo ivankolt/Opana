@@ -1290,6 +1290,8 @@ namespace UchPR
         public string Name { get; set; }
         public string ImagePath { get; set; }
         public string Type { get; set; }
+
+        public string DisplayName;
     }
 
     public class DesignAccessoryItem : INotifyPropertyChanged

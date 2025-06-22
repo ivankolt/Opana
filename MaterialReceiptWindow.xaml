@@ -87,9 +87,9 @@
 
                 <!-- Наименование материала - ИСПРАВЛЕНО -->
                 <DataGridComboBoxColumn Header="Наименование" Width="3*"
-                               DisplayMemberPath="Name"
-                               SelectedValuePath="Id"
-                               SelectedValueBinding="{Binding MaterialArticle, UpdateSourceTrigger=PropertyChanged}"/>
+                    DisplayMemberPath="DisplayName"
+                    SelectedValuePath="Id"
+                    SelectedValueBinding="{Binding MaterialArticle, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <!-- Остальные колонки -->
                 <DataGridTextColumn Header="Количество" 

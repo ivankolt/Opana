@@ -17,7 +17,9 @@ namespace UchPR
         private string currentStatus;
         private string managerLogin;
         private ObservableCollection<OrderItem> orderItems;
-        
+        private string managerFio;
+        private string managerPassword;
+
         public ManagerOrderDetails(int orderNumber, DateTime orderDate, string managerLogin, string managerPassword)
         {
             InitializeComponent();
@@ -25,6 +27,8 @@ namespace UchPR
             currentOrderNumber = orderNumber;
             currentOrderDate = orderDate;
             this.managerLogin = managerLogin;
+            this.managerPassword = managerPassword;
+            managerFio = GetUserFullName(managerLogin);
 
             orderItems = new ObservableCollection<OrderItem>();
             dgOrderItems.ItemsSource = orderItems;
@@ -38,7 +42,7 @@ namespace UchPR
             try
             {
                 // Загрузка основной информации о заказе (включая статус)
-                string headerQuery = "SELECT execution_stage FROM orders WHERE number = @number AND date = @date";
+                string headerQuery = "SELECT execution_stage FROM orders WHERE number = @number AND date = @date ORDER BY number ASC";
                 var headerParams = new[] {
     new NpgsqlParameter("@number", currentOrderNumber),
     new NpgsqlParameter("@date", currentOrderDate)
@@ -56,19 +60,17 @@ namespace UchPR
 
                 string itemsQuery = @"
             SELECT 
-                op.product_article, 
-                pn.name as product_name, 
-                op.quantity, 
-                -- Расчет средней себестоимости со склада как цены за единицу
-                COALESCE((SELECT AVG(pw.production_cost) 
-                          FROM productwarehouse pw 
-                          WHERE pw.product_article = op.product_article), 0) as unit_price,
-            p.width,
-            p.length
-            FROM orderedproducts op
-            JOIN product p ON op.product_article = p.article
-            JOIN productname pn ON p.name_id = pn.id
-            WHERE op.order_number = @number AND op.order_date = @date";
+    op.product_article, 
+    pn.name as product_name, 
+    op.quantity, 
+    COALESCE((SELECT AVG(pw.production_cost) FROM productwarehouse pw WHERE pw.product_article = op.product_article), 0) as unit_price,
+    p.width,
+    p.length,
+    p.unit_of_measurement_id
+FROM orderedproducts op
+JOIN product p ON op.product_article = p.article
+JOIN productname pn ON p.name_id = pn.id
+WHERE op.order_number = @number AND op.order_date = @date";
 
                 var itemsParams = new[] {
             new NpgsqlParameter("@number", currentOrderNumber),
@@ -84,10 +86,10 @@ namespace UchPR
                         ProductArticle = row["product_article"].ToString(),
                         ProductName = row["product_name"].ToString(),
                         Quantity = (int)row["quantity"],
-                        // Теперь цена подставляется корректно
                         UnitPrice = SafeDataReader.GetSafeDecimal(row, "unit_price"),
-                         Width = SafeDataReader.GetSafeDecimal(row, "width"),
-        Length = SafeDataReader.GetSafeDecimal(row, "length")
+                        Width = SafeDataReader.GetSafeDecimal(row, "width"),
+                        Length = SafeDataReader.GetSafeDecimal(row, "length"),
+                        UnitId = Convert.ToInt32(row["unit_of_measurement_id"])
                     });
                 }
             }
@@ -215,6 +217,125 @@ namespace UchPR
             }
         }
 
+
+        public void ProcessResidualProduct(
+           int orderNumber,
+           DateTime orderDate,
+           string productArticle,
+           decimal totalCost,    // полная себестоимость партии изделий (CreateProduction)
+           int quantity,         // всего изделий в партии
+           int unitId,
+           string login,
+           string password,
+           string fio)
+        {
+            // 1. Получаем размеры изделия и порог списания из product
+            string productQuery = "SELECT width, length, scrap_threshold FROM product WHERE article = @article";
+            var productParams = new[] { new NpgsqlParameter("@article", productArticle) };
+            var productData = database.GetData(productQuery, productParams);
+
+            if (productData.Rows.Count == 0)
+                throw new Exception($"Изделие с артикулом {productArticle} не найдено в справочнике.");
+
+            decimal width = Convert.ToDecimal(productData.Rows[0]["width"]);
+            decimal length = Convert.ToDecimal(productData.Rows[0]["length"]);
+            decimal scrapThreshold = Convert.ToDecimal(productData.Rows[0]["scrap_threshold"]);
+
+            decimal productArea = width * length; // см²
+
+            // 2. Получаем сумму площадей обрезков из productcuts
+            string cutsQuery = @"SELECT COALESCE(SUM(length * width), 0) FROM productcuts
+                         WHERE order_number = @orderNumber AND order_date = @orderDate AND product_article = @article";
+            var cutsParams = new[] {
+        new NpgsqlParameter("@orderNumber", orderNumber),
+        new NpgsqlParameter("@orderDate", orderDate),
+        new NpgsqlParameter("@article", productArticle)
+    };
+            var cutsData = database.GetData(cutsQuery, cutsParams);
+
+            decimal cutsArea = 0;
+            if (cutsData.Rows.Count > 0)
+                cutsArea = Convert.ToDecimal(cutsData.Rows[0][0]);
+
+            decimal residualArea = productArea - cutsArea;
+
+            if (residualArea <= 0)
+            {
+                MessageBox.Show("Нет остатка, ничего не делаем");
+                return;
+            }
+
+            // Новый production_cost: себестоимость одного изделия
+            decimal productionCost = quantity > 0 ? totalCost / quantity : 0;
+
+            // Новый расчет стоимости остатка:
+            // residualCost = residualArea * (productionCost / productArea)
+            decimal avgCostPerCm2 = productArea > 0 ? totalCost / productArea : 0;
+            decimal residualCost = residualArea * avgCostPerCm2;
+
+            // Корректный расчет новых длины и ширины остатка:
+            // Ширина не меняется, длина = остаточная площадь / ширина
+            decimal residualLength = width > 0 ? residualArea / width : 0;
+            decimal residualWidth = width;
+
+            if (residualArea >= scrapThreshold)
+            {
+                // Добавляем остаток на склад изделий как обрезок
+                MessageBox.Show("Добавляем на склад");
+                string insertWarehouseQuery = @"
+            INSERT INTO productwarehouse
+            (product_article, quantity, production_cost, total_cost, length, width, is_scrap, production_date, created_at)
+            VALUES (@article, 1, @prodCost, @totalCost, @length, @width, true, CURRENT_DATE, CURRENT_TIMESTAMP)";
+
+                var insertParams = new[] {
+            new NpgsqlParameter("@article", productArticle),
+            new NpgsqlParameter("@prodCost", residualCost), // себестоимость одного изделия
+            new NpgsqlParameter("@totalCost", residualCost),  // итоговая стоимость остатка
+            new NpgsqlParameter("@length", residualLength),
+            new NpgsqlParameter("@width", residualWidth)
+        };
+
+                database.ExecuteNonQuery(insertWarehouseQuery, insertParams);
+            }
+            else
+            {
+                // Списываем остаток в scraplog
+                MessageBox.Show("Списываем остаток");
+                string insertScrapLogQuery = @"
+            INSERT INTO scraplog
+            (log_date, material_article, quantity_scrapped, unit_of_measurement_id, cost_scrapped, written_off_by_login, written_off_by_password, written_off_by)
+            VALUES (CURRENT_TIMESTAMP, @article, @qty, @unit, @cost, @login, @password, @name)";
+
+                var scrapLogParams = new[] {
+            new NpgsqlParameter("@article", productArticle),
+            new NpgsqlParameter("@qty", residualArea),
+            new NpgsqlParameter("@unit", unitId),
+            new NpgsqlParameter("@cost", residualCost),
+            new NpgsqlParameter("@login", login),
+            new NpgsqlParameter("@password", password),
+            new NpgsqlParameter("@name", fio)
+        };
+
+                database.ExecuteNonQuery(insertScrapLogQuery, scrapLogParams);
+            }
+        }
+
+
+        public string GetUserFullName(string login)
+        {
+            string sql = "SELECT name FROM users WHERE login = @login";
+            using (var conn = new NpgsqlConnection("Host=localhost;Username=postgres;Password=12345;Database=UchPR"))
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@login", login);
+                    var result = cmd.ExecuteScalar();
+                    return result != null && result != DBNull.Value ? result.ToString() : login;
+                }
+            }
+        }
+
         private bool DeductProductsFromWarehouse(NpgsqlConnection connection, NpgsqlTransaction transaction)
         {
             // 1. Проверяем, достаточно ли товаров на складе для всего заказа
@@ -230,7 +351,6 @@ namespace UchPR
                 }
             }
 
-            // 2. Если товаров достаточно, списываем их по принципу FIFO
             foreach (var item in orderItems)
             {
                 int quantityToDeduct = item.Quantity;
@@ -257,15 +377,29 @@ namespace UchPR
                         // Уменьшаем количество в партии
                         string updateQuery = "UPDATE productwarehouse SET quantity = quantity - @deduct WHERE batch_id = @batch_id";
                         database.ExecuteNonQueryWithTransaction(updateQuery, connection, transaction, new[] {
-                            new NpgsqlParameter("@deduct", deductFromThisBatch),
-                            new NpgsqlParameter("@batch_id", batchId)
-                        });
+                new NpgsqlParameter("@deduct", deductFromThisBatch),
+                new NpgsqlParameter("@batch_id", batchId)
+            });
                     }
 
                     quantityToDeduct -= deductFromThisBatch;
                 }
+
+                // После полного списания по изделию — обработка остатка/обрезка
+                ProcessResidualProduct(
+                currentOrderNumber,
+                currentOrderDate,
+                item.ProductArticle,
+                item.UnitPrice,
+                (int)item.TotalPrice,
+                (int)item.UnitId,    // Явное приведение типа
+                managerLogin,
+                managerPassword,
+                managerFio
+            );
             }
             return true;
+
         }
 
         private void UpdateOrderStatus(string newStatus, NpgsqlConnection connection, NpgsqlTransaction transaction)
@@ -302,6 +436,8 @@ namespace UchPR
         }
 
         public decimal TotalPrice => Quantity * UnitPrice;
+
+        public int UnitId { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

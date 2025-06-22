@@ -216,7 +216,7 @@ namespace UchPR
                 }
 
                 // Теперь рисуем все изделия и их размещённые отрезки
-                double offsetY = 0;
+                double offsetY = 30;
                 for (int n = 0; n < count; n++)
                 {
                     // Рисуем изделие

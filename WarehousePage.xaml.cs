@@ -92,19 +92,11 @@ namespace UchPR
 
         private void btnSetThreshold_Click(object sender, RoutedEventArgs e)
         {
-            string materialType = cmbMaterialType.SelectedIndex == 0 ? "Fabric" : "Accessory";
-            var thresholdWindow = new ThresholdSettingsWindow(materialType);
+            // Открываем окно настройки порогов для изделий
+            var thresholdWindow = new ThresholdSettingsWindow();
             thresholdWindow.ShowDialog();
 
-            // Обновляем данные после закрытия окна
-            if (cmbMaterialType.SelectedIndex == 0)
-            {
-                LoadFabricWarehouseData();
-            }
-            else
-            {
-                LoadAccessoryWarehouseData();
-            }
+            
         }
 
         private void btnScrapLog_Click(object sender, RoutedEventArgs e)

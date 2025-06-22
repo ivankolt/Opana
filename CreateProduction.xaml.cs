@@ -614,9 +614,17 @@ namespace UchPR
             decimal totalCost = fabricItems.Sum(f => f.TotalCost) + accessoryItems.Sum(a => a.TotalCost);
             decimal unitCost = totalCost / quantity;
 
-            string insertQuery = @"
-                INSERT INTO productwarehouse (product_article, quantity, production_cost, total_cost)
-                VALUES (@product_article, @quantity, @production_cost, @total_cost)";
+            string insertQuery = @"INSERT INTO productwarehouse (product_article, quantity, production_cost, total_cost, length, width, is_scrap)
+            SELECT
+                p.article,
+                @quantity,
+                @production_cost,
+                @total_cost,
+                p.length,
+                p.width,
+                false
+            FROM product p
+            WHERE p.article = @product_article";
 
             using (var cmd = new NpgsqlCommand(insertQuery, connection, transaction))
             {

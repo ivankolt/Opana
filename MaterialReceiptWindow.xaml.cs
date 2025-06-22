@@ -232,7 +232,8 @@ namespace UchPR
                     materials.Add(new MaterialItem
                     {
                         Id = row["article"].ToString(),
-                        Name = row["name"].ToString()
+                        Name = row["name"].ToString(),
+                        DisplayName = $"{row["name"]} ({row["article"]})"
                     });
                 }
 

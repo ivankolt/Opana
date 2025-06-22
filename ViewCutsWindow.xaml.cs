@@ -83,7 +83,7 @@ namespace UchPR
                     Fill = Brushes.Transparent
                 };
                 Canvas.SetLeft(borderRect, 0);
-                Canvas.SetTop(borderRect, 0);
+                Canvas.SetTop(borderRect, 50);
                 canvasVisual.Children.Add(borderRect);
 
                 var label = new TextBlock
