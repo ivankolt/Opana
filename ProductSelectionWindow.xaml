@@ -22,6 +22,7 @@
 
         <!-- Заголовок -->
         <Border Grid.Row="0" Background="{StaticResource PrimaryColor1}">
+            
             <TextBlock Text="Добавление изделий в заказ"
                        VerticalAlignment="Center" HorizontalAlignment="Center"
                        FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextWhite}"/>

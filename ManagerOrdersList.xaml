@@ -17,10 +17,15 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+
         <!-- Заголовок -->
         <Border Grid.Row="0" Background="{StaticResource PrimaryColor1}">
             <TextBlock Text="Новые заказы от клиентов" FontSize="20" FontWeight="Bold" 
                        Foreground="{StaticResource TextWhite}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        </Border>
+
+        <Border Grid.Row="0" Background="#00000000" >
+            <Image Source="/Images/Logo/logo-01.jpg" Margin="5,0,815,0"/>
         </Border>
 
         <!-- Список заказов -->
@@ -36,7 +41,7 @@
                 <DataGridTextColumn Header="Сумма" Binding="{Binding TotalCost, StringFormat=N2}" Width="1.5*"/>
                 <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="1.5*"/>
                 <DataGridTextColumn Header="Менеджер" Binding="{Binding ManagerLogin}" Width="1.5*"/>
-        
+
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

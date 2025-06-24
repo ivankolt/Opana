@@ -3,6 +3,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Windows;
+using System.Windows.Input;
 
 namespace UchPR
 {
@@ -23,6 +24,17 @@ namespace UchPR
 
             LoadCustomerOrders();
         }
+
+        private void dgOrders_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (dgOrders.SelectedItem is CustomerOrder selectedOrder)
+            {
+                var detailsWindow = new CustomerOrderDetailsWindow(selectedOrder.OrderNumber, selectedOrder.OrderDate);
+                detailsWindow.Owner = this;
+                detailsWindow.ShowDialog();
+            }
+        }
+
 
         private void LoadCustomerOrders()
         {

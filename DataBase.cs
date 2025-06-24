@@ -308,11 +308,40 @@
                 return units;
             }
 
-            /// <summary>
-            /// Проверяет, существует ли пользователь с таким логином в базе.
-            /// </summary>
-            /// <returns>true, если логин занят, иначе false.</returns>
-            public bool LoginExists(string login)
+        public List<ProductWarehouseItem> GetProductWarehouseData()
+        {
+            var result = new List<ProductWarehouseItem>();
+            string sql = @"
+        SELECT pw.batch_id, pw.product_article, pn.name AS product_name, pw.quantity, pw.production_cost, pw.total_cost, pw.production_date, pw.length, pw.width
+        FROM productwarehouse pw
+        JOIN product p ON p.article = pw.product_article
+        JOIN productname pn ON p.name_id = pn.id
+        ORDER BY pw.production_date DESC";
+            var dt = GetData(sql);
+            foreach (DataRow row in dt.Rows)
+            {
+                result.Add(new ProductWarehouseItem
+                {
+                    BatchId = Convert.ToInt32(row["batch_id"]),
+                    ProductArticle = row["product_article"].ToString(),
+                    ProductName = row["product_name"].ToString(),
+                    Quantity = Convert.ToInt32(row["quantity"]),
+                    ProductionCost = Convert.ToDecimal(row["production_cost"]),
+                    TotalCost = Convert.ToDecimal(row["total_cost"]),
+                    ProductionDate = row["production_date"] != DBNull.Value ? Convert.ToDateTime(row["production_date"]) : DateTime.MinValue,
+                    Length = row["length"] != DBNull.Value ? Convert.ToDecimal(row["length"]) : 0,
+                    Width = row["width"] != DBNull.Value ? Convert.ToDecimal(row["width"]) : 0
+                });
+            }
+            return result;
+        }
+
+
+        /// <summary>
+        /// Проверяет, существует ли пользователь с таким логином в базе.
+        /// </summary>
+        /// <returns>true, если логин занят, иначе false.</returns>
+        public bool LoginExists(string login)
             {
                 try
                 {

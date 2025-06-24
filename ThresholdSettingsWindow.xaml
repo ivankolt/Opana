@@ -9,13 +9,21 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="60"/>
         </Grid.RowDefinitions>
-
+      
         <!-- Заголовок -->
         <Border Grid.Row="0" Background="#B5D5CA">
-            <TextBlock Text="Настройка автоматического списания остатков изделий"
-                       VerticalAlignment="Center" FontSize="16" FontWeight="Bold"
-                       Foreground="Black" Margin="20,0,0,0"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image Source="Images/Logo/logo-01.jpg" Height="50" Width="50" Margin="5" Grid.Column="0"/>
+                <TextBlock Text="Настройка автоматического списания остатков изделий"
+                   VerticalAlignment="Center" FontSize="16" FontWeight="Bold"
+                   Foreground="White" HorizontalAlignment="Center" Grid.Column="1"/>
+            </Grid>
         </Border>
+
 
         <!-- Основной контент -->
         <Grid Grid.Row="1" Margin="20">

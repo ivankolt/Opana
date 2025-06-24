@@ -138,7 +138,7 @@ namespace UchPR
         {
             string sql = $@"SELECT {articleField} as article, {diffQtyField} as diff, {diffAmountField} as amount
                             FROM {table}
-                            WHERE document_id = @docId AND ABS({diffAmountField}) > 1000";
+                            WHERE document_id = @docId AND ABS({diffAmountField}) > 1";
             using (var conn = new NpgsqlConnection(database.connectionString))
             {
                 conn.Open();

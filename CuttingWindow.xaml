@@ -1,40 +1,87 @@
 ﻿<Window x:Class="UchPR.CuttingWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Раскрой изделия" Height="700" Width="1100">
+        Title="Раскрой изделия" Height="700" Width="1100"
+        WindowStartupLocation="CenterScreen"
+        Background="#FFFCD6">
+    <Window.Resources>
+        <SolidColorBrush x:Key="PrimaryColor" Color="#B5D5CA"/>
+        <SolidColorBrush x:Key="SecondaryColor" Color="#E0A9AF"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#D1EEFC"/>
+        <SolidColorBrush x:Key="AltRowColor" Color="#FFFCD6"/>
+        <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
+        <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
+        <!-- Стиль для кнопок -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource PrimaryColor}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBlack}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="15,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+           
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="4" ShadowDepth="2" Opacity="0.15"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                               
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="310"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <!-- Список изделий -->
-        <ListBox x:Name="lbProducts" Grid.Column="0" Margin="10"
-         SelectionChanged="lbProducts_SelectionChanged">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding ProductName}" FontWeight="Bold"/>
-                        <TextBlock Text=" ×" />
-                        <TextBlock Text="{Binding Quantity}" Foreground="DarkBlue"/>
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <Border Grid.Column="0" Margin="10" Background="{StaticResource PrimaryColor}" CornerRadius="12">
+            <ListBox x:Name="lbProducts"
+                     Margin="8"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     SelectionChanged="lbProducts_SelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="0,4">
+                            <TextBlock Text="{Binding ProductName}" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextBlack}"/>
+                            <TextBlock Text=" ×" FontSize="14"/>
+                            <TextBlock Text="{Binding Quantity}" Foreground="DarkBlue" FontSize="14"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
         <!-- Правая часть: визуализация и добавление раскроя -->
-        <StackPanel Grid.Column="1" Margin="10">
-            <TextBlock Text="Добавьте отрезки для выбранного изделия:" FontWeight="Bold"/>
-            <StackPanel Orientation="Horizontal" Margin="0,5">
-                <TextBlock Text="Длина (см):" VerticalAlignment="Center"/>
-                <TextBox x:Name="txtCutLength" Width="60" Margin="5,0"/>
-                <TextBlock Text="Ширина (см):" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                <TextBox x:Name="txtCutWidth" Width="60" Margin="5,0"/>
-                <Button Content="Добавить отрезок" Click="BtnAddCut_Click" Width="130" Margin="10,0,0,0"/>
+        <Border Grid.Column="1" Margin="10" Padding="10" Background="White" CornerRadius="12">
+            <StackPanel>
+                <TextBlock Text="Добавьте отрезки для выбранного изделия:" FontWeight="Bold" FontSize="16" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Длина (см):" VerticalAlignment="Center" FontSize="14"/>
+                    <TextBox x:Name="txtCutLength" Width="60" Margin="5,0" FontSize="14"/>
+                    <TextBlock Text="Ширина (см):" VerticalAlignment="Center" Margin="10,0,0,0" FontSize="14"/>
+                    <TextBox x:Name="txtCutWidth" Width="60" Margin="5,0" FontSize="14"/>
+                    <Button x:Name="add" Content="Добавить отрезок" Click="BtnAddCut_Click" Width="130" Margin="10,0,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button x:Name="Viz" Content="Визуализировать" Click="BtnVisualize_Click" Width="150"/>
+                    <Button Content="Сохранить обрезки" Click="BtnSaveCuts_Click" x:Name="btnSaveCuts" Width="150"/>
+                </StackPanel>
+                <ScrollViewer Height="500" Margin="0,10">
+                    <Canvas x:Name="canvasVisual" Background="{StaticResource AccentColor}" Height="480" />
+                </ScrollViewer>
             </StackPanel>
-            <Button Content="Визуализировать" Click="BtnVisualize_Click" Width="150" Margin="0,5"/>
-            <Button Content="Сохранить обрезки" Click="BtnSaveCuts_Click" x:Name="btnSaveCuts" Width="150" Margin="0,5"/>
-            <ScrollViewer Height="500" Margin="0,10">
-                <Canvas x:Name="canvasVisual" Background="White" Height="480"/>
-            </ScrollViewer>
-        </StackPanel>
+        </Border>
     </Grid>
 </Window>

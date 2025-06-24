@@ -737,7 +737,13 @@ namespace UchPR
 
     #region Модели данных
 
-
+    public class ProductItem
+    {
+        public int Id { get; set; }
+        public string Article { get; set; }
+        public string Name { get; set; }
+        public string Category { get; set; }
+    }
     public class ProductionFabricItem : INotifyPropertyChanged
     {
         private decimal _actualQuantity;

@@ -18,6 +18,7 @@ namespace UchPR
         private int? receiptId;
         private bool isAccepted = false;
         private ObservableCollection<MaterialReceiptLine> receiptLines;
+        private List<MaterialItem> allMaterials = new List<MaterialItem>();
 
         public MaterialReceiptWindow(string userRole, int? receiptId = null)
         {
@@ -34,6 +35,7 @@ namespace UchPR
                 this.Close();
                 return;
             }
+
 
             InitializeDocument();
             SetupDataGrid();
@@ -184,7 +186,26 @@ namespace UchPR
         private void UpdateMaterialsList(string materialType)
         {
             var materialNameColumn = dgMaterials.Columns[1] as DataGridComboBoxColumn;
-            materialNameColumn.ItemsSource = GetMaterialsByType(materialType);
+            allMaterials = GetMaterialsByType(materialType); // сохраняем полный список
+            materialNameColumn.ItemsSource = allMaterials;
+        }
+
+        private void tbMaterialSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var materialNameColumn = dgMaterials.Columns[1] as DataGridComboBoxColumn;
+            if (allMaterials == null) return;
+
+            string search = tbMaterialSearch.Text.ToLower();
+            if (string.IsNullOrWhiteSpace(search))
+            {
+                materialNameColumn.ItemsSource = allMaterials;
+            }
+            else
+            {
+                materialNameColumn.ItemsSource = allMaterials
+                    .Where(m => m.Name.ToLower().Contains(search) || m.Id.ToLower().Contains(search))
+                    .ToList();
+            }
         }
 
         private List<MaterialTypeItem> GetMaterialTypes()
@@ -204,16 +225,16 @@ namespace UchPR
                 if (materialType == "fabric")
                 {
                     query = @"
-                        SELECT f.article, fn.name 
-                        FROM fabric f
-                        LEFT JOIN fabricname fn ON f.name_id = fn.code
-                        WHERE fn.name IS NOT NULL
-                        ORDER BY fn.name";
+                         SELECT f.article, concat(f.article,' ',fn.name) as name
+                             FROM fabric f
+                             LEFT JOIN fabricname fn ON f.name_id = fn.code
+                             WHERE fn.name IS NOT NULL
+                             ORDER BY fn.name";
                 }
                 else if (materialType == "accessory")
                 {
                     query = @"
-                        SELECT a.article, fan.name 
+                        SELECT a.article, concat(a.article,' ',fan.name) as name
                         FROM accessory a
                         LEFT JOIN furnitureaccessoryname fan ON a.name_id = fan.id
                         WHERE fan.name IS NOT NULL

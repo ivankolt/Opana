@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -20,10 +21,18 @@ namespace UchPR
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             SetPermissions();
-            // По умолчанию выбираем "Ткани"
+            FillMaterialTypeCombo();
             cmbMaterialType.SelectedIndex = 0;
         }
 
+        private void FillMaterialTypeCombo()
+        {
+            cmbMaterialType.Items.Clear();
+            cmbMaterialType.Items.Add(new ComboBoxItem { Content = "Ткани" });
+            cmbMaterialType.Items.Add(new ComboBoxItem { Content = "Фурнитура" });
+            if (_userRole == "Руководитель" || _userRole == "Менеджер")
+                cmbMaterialType.Items.Add(new ComboBoxItem { Content = "Продукция" });
+        }
         private void SetPermissions()
         {
             if (_userRole == "Кладовщик")
@@ -40,16 +49,42 @@ namespace UchPR
         {
             if (!IsLoaded) return;
 
-            if (cmbMaterialType.SelectedIndex == 0) // Ткани
+            string selectedType = (cmbMaterialType.SelectedItem as ComboBoxItem)?.Content.ToString();
+            if (selectedType == "Ткани")
             {
-                ShowFabricWarehouse();
+                dgFabrics.Visibility = Visibility.Visible;
+                dgAccessories.Visibility = Visibility.Collapsed;
+                dgProducts.Visibility = Visibility.Collapsed;
+                LoadFabricWarehouseData();
             }
-            else // Фурнитура
+            else if (selectedType == "Фурнитура")
             {
-                ShowAccessoryWarehouse();
+                dgFabrics.Visibility = Visibility.Collapsed;
+                dgAccessories.Visibility = Visibility.Visible;
+                dgProducts.Visibility = Visibility.Collapsed;
+                LoadAccessoryWarehouseData();
+            }
+            else if (selectedType == "Продукция")
+            {
+                dgFabrics.Visibility = Visibility.Collapsed;
+                dgAccessories.Visibility = Visibility.Collapsed;
+                dgProducts.Visibility = Visibility.Visible;
+                LoadProductWarehouseData();
             }
         }
 
+        private void LoadProductWarehouseData()
+        {
+            try
+            {
+                var productData = db.GetProductWarehouseData();
+                dgProducts.ItemsSource = productData;
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки данных склада продукции: {ex.Message}");
+            }
+        }
         private void ShowFabricWarehouse()
         {
             dgFabrics.Visibility = Visibility.Visible;
@@ -125,13 +160,32 @@ namespace UchPR
         }
     }
 
+    public class ProductWarehouseItem : INotifyPropertyChanged
+    {
+        public int BatchId { get; set; }
+        public string ProductArticle { get; set; }
+        public string ProductName { get; set; }
+        public int Quantity { get; set; }
+        public decimal ProductionCost { get; set; }
+        public decimal TotalCost { get; set; }
+        public DateTime ProductionDate { get; set; }
+        public decimal Length { get; set; }
+        public decimal Width { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
     // Модель данных для склада фурнитуры
     public class AccessoryWarehouseItem : INotifyPropertyChanged
     {
         public int BatchNumber { get; set; }
         public string AccessoryArticle { get; set; }
         public string AccessoryName { get; set; }
-        public int Quantity { get; set; }
+        public int Quantity { get; set; }   
         public string UnitName { get; set; }
         public decimal PurchasePrice { get; set; }
         public decimal TotalCost { get; set; }

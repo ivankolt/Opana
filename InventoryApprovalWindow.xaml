@@ -3,42 +3,92 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Утверждение инвентаризации директором"
         Height="700" Width="1100"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Background="#FFFCD6">
+    <Window.Resources>
+        <SolidColorBrush x:Key="PrimaryColor" Color="#B5D5CA"/>
+        <SolidColorBrush x:Key="SecondaryColor" Color="#E0A9AF"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#D1EEFC"/>
+        <SolidColorBrush x:Key="AltRowColor" Color="#FFFCD6"/>
+        <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
+        <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
+        <!-- Стиль для DataGrid -->
+        <Style TargetType="DataGrid">
+            <Setter Property="AlternatingRowBackground" Value="{StaticResource AltRowColor}"/>
+            <Setter Property="GridLinesVisibility" Value="All"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="RowHeight" Value="32"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+        </Style>
+        <!-- Стиль для GroupBox -->
+        <Style TargetType="GroupBox">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,10,0,0"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="BorderBrush" Value="#B5D5CA"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <!-- Стиль для кнопок -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource PrimaryColor}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBlack}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="15,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
             <RowDefinition Height="Auto"/>
-            <!-- Фильтры -->
             <RowDefinition Height="*"/>
-            <!-- Таблица документов -->
-            <RowDefinition Height="Auto"/>
-            <!-- Детали и кнопки -->
         </Grid.RowDefinitions>
 
+        <!-- Шапка с логотипом и заголовком -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryColor}" CornerRadius="0,0,12,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image Source="/Images/Logo/logo-01.jpg" Width="60" Height="60" Margin="10"/>
+                <TextBlock Text="Утверждение инвентаризации директором"
+                           VerticalAlignment="Center" FontSize="22" FontWeight="Bold"
+                           Foreground="{StaticResource TextWhite}" Margin="15,0,0,0" Grid.Column="1"/>
+            </Grid>
+        </Border>
+
         <!-- Фильтры -->
-        <StackPanel Orientation="Horizontal" Margin="10" Grid.Row="0">
-            <TextBlock Text="Статус:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            <ComboBox x:Name="cbStatusFilter" Width="200" Margin="0,0,15,0"/>
-            <TextBlock Text="Поиск:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            <TextBox x:Name="tbSearch" Width="300" Margin="0,0,15,0"/>
-            <Button Content="Обновить" Width="110" Click="BtnRefresh_Click"/>
-        </StackPanel>
+        <Border Grid.Row="1" Background="{StaticResource AccentColor}" CornerRadius="12" Margin="20,10,20,0" Padding="10">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Статус:" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="14"/>
+                <ComboBox x:Name="cbStatusFilter" Width="180" Margin="0,0,15,0" FontSize="14"/>
+                <TextBlock Text="Поиск:" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="14"/>
+                <TextBox x:Name="tbSearch" Width="250" Margin="0,0,15,0" FontSize="14"/>
+                <Button Content="Обновить" Width="110" FontSize="14" Click="BtnRefresh_Click"/>
+            </StackPanel>
+        </Border>
 
         <!-- Таблица документов -->
         <DataGrid x:Name="dgDocuments" Grid.Row="1" Margin="10"
-                  AutoGenerateColumns="False" IsReadOnly="True"
-                  SelectionChanged="DgDocuments_SelectionChanged">
+AutoGenerateColumns="False" IsReadOnly="True"
+SelectionChanged="DgDocuments_SelectionChanged">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Номер" Binding="{Binding DocumentNumber}" Width="1*"/>
                 <DataGridTextColumn Header="Дата" Binding="{Binding InventoryDate, StringFormat=dd.MM.yyyy}" Width="1*"/>
                 <DataGridTextColumn Header="Ответственный" Binding="{Binding ResponsiblePerson}" Width="1.5*"/>
                 <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="1*"/>
-                <DataGridTextColumn Header="Сумма расхождений" Binding="{Binding TotalDiscrepancyAmount, StringFormat=C}" Width="1*"/>
+                <DataGridTextColumn Header="Сумма расхождений" Binding="{Binding TotalDiscrepancyAmount,  StringFormat={}{0:N2} руб.}" Width="1*"/>
                 <DataGridTextColumn Header="% расхождений" Binding="{Binding DiscrepancyPercentage, StringFormat=F1}" Width="1*"/>
             </DataGrid.Columns>
         </DataGrid>
 
         <!-- Детали и кнопки -->
-        <Border Grid.Row="2" Background="#F6F6F6" Padding="10">
+        <Border Grid.Row="3" Background="{StaticResource AltRowColor}" Padding="15" CornerRadius="12" Margin="20,10,20,20">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
@@ -46,14 +96,14 @@
                 </Grid.ColumnDefinitions>
                 <!-- Детализация документа -->
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="Детализация расхождений" FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="Детализация расхождений" FontWeight="Bold" FontSize="15"/>
                     <TabControl x:Name="tabDetails" Margin="0,10,0,0" Height="180">
                         <TabItem Header="Сводка">
                             <DataGrid x:Name="dgSummary" AutoGenerateColumns="False" IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Категория" Binding="{Binding Category}"/>
                                     <DataGridTextColumn Header="Кол-во" Binding="{Binding ItemCount}"/>
-                                    <DataGridTextColumn Header="Сумма расхождений" Binding="{Binding DiscrepancyAmount, StringFormat=C}"/>
+                                    <DataGridTextColumn Header="Сумма расхождений" Binding="{Binding DiscrepancyAmount,  StringFormat={}{0:N2} руб.}"/>
                                     <DataGridTextColumn Header="% от общей суммы" Binding="{Binding PercentageOfTotal, StringFormat=F1}"/>
                                 </DataGrid.Columns>
                             </DataGrid>
@@ -73,13 +123,13 @@
                 </StackPanel>
                 <!-- Комментарий и кнопки -->
                 <StackPanel Grid.Column="1" Margin="25,0,0,0">
-                    <TextBlock Text="Комментарий руководителя (обязательно для утверждения):" FontWeight="Bold"/>
-                    <TextBox x:Name="txtDirectorComment" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,5,0,5"/>
+                    <TextBlock Text="Комментарий руководителя (обязательно для утверждения):" FontWeight="Bold" FontSize="14"/>
+                    <TextBox x:Name="txtDirectorComment" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,5,0,5" FontSize="14"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
                         <Button x:Name="btnApprove" Content="✓ Утвердить" Width="130" Margin="5"
-                                Background="Green" Foreground="White" Click="BtnApprove_Click"/>
+                                Background="Green" Foreground="White" FontSize="14" />
                         <Button x:Name="btnReject" Content="✗ Отклонить" Width="130" Margin="5"
-                                Background="Red" Foreground="White" Click="BtnReject_Click"/>
+                                Background="Red" Foreground="White" FontSize="14" />
                     </StackPanel>
                 </StackPanel>
             </Grid>

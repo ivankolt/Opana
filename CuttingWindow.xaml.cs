@@ -25,16 +25,30 @@ namespace UchPR
         private DateTime orderDate;
         private DataBase database;
         private bool cutsSaved = false;
+        private bool isReadOnlyMode = false;
 
-        public CuttingWindow(int orderNumber, DateTime orderDate, List<OrderItem> items)
+        public CuttingWindow(int orderNumber, DateTime orderDate, List<OrderItem> items, bool readOnly = false)
         {
             InitializeComponent();
             this.orderNumber = orderNumber;
             this.orderDate = orderDate;
             orderItems = items;
             lbProducts.ItemsSource = orderItems;
-            database = new DataBase(); // добавьте эту строку!
+            database = new DataBase();
+            isReadOnlyMode = readOnly;
+            if (isReadOnlyMode)
+            {
+                btnSaveCuts.IsEnabled = false;
+                Viz.IsEnabled = false;
+                add.IsEnabled = false;
+                txtCutLength.IsEnabled = false;
+                txtCutWidth.IsEnabled = false;
+            }
+
         }
+
+
+
 
 
         private void SaveCutsToDb()

@@ -18,7 +18,7 @@ namespace UchPR
         private string currentUserRole;
         private List<UnitOfMeasurement> units;
         private UnitOfMeasurement selectedUnit;
-
+        private List<FabricCardViewModel> allFabricsList = new List<FabricCardViewModel>();
         public FabricListWindow(string userRole)
         {
             InitializeComponent();
@@ -175,7 +175,9 @@ namespace UchPR
                 }
 
                 // Привязываем к ItemsControl вместо DataGrid
-                lbFabrics.ItemsSource = fabricsList;
+                allFabricsList = fabricsList;
+                lbFabrics.ItemsSource = allFabricsList;
+
 
                 // Сохраняем исходную таблицу для фильтрации
                 this.fabricsTable = fabricsTable;
@@ -395,12 +397,9 @@ namespace UchPR
         }
         private void ApplyFilters()
         {
-            if (lbFabrics.ItemsSource == null) return;
+            if (allFabricsList == null) return;
 
-            var allFabrics = lbFabrics.ItemsSource as List<FabricCardViewModel>;
-            if (allFabrics == null) return;
-
-            var filteredFabrics = allFabrics.AsEnumerable();
+            var filteredFabrics = allFabricsList.AsEnumerable();
 
             // Фильтр по поиску
             if (!string.IsNullOrWhiteSpace(txtSearch.Text))
@@ -416,14 +415,13 @@ namespace UchPR
             // Фильтр по составу
             if (cmbComposition.SelectedIndex > 0)
             {
-                string selectedComposition = ((ComboBoxItem)cmbComposition.SelectedItem).Content.ToString();
+                string selectedComposition = cmbComposition.SelectedItem as string;
                 if (selectedComposition != "Все составы")
                 {
                     filteredFabrics = filteredFabrics.Where(f => f.CompositionName == selectedComposition);
                 }
             }
 
-            // Применяем фильтр
             lbFabrics.ItemsSource = filteredFabrics.ToList();
         }
 

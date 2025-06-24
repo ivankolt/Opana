@@ -27,11 +27,8 @@
                            FontSize="14" FontWeight="SemiBold"
                            Foreground="{StaticResource TextBlack}"/>
                 <ComboBox x:Name="cmbMaterialType" Width="150" Margin="10,0" 
-                          FontSize="12" Height="30"
-                          SelectionChanged="cmbMaterialType_SelectionChanged">
-                    <ComboBoxItem Content="Ткани"/>
-                    <ComboBoxItem Content="Фурнитура"/>
-                </ComboBox>
+          FontSize="12" Height="30"
+          SelectionChanged="cmbMaterialType_SelectionChanged"/>
             </StackPanel>
         </Border>
 
@@ -72,6 +69,25 @@
                 <DataGridTextColumn Header="Общая стоимость" Binding="{Binding TotalCost, StringFormat={}{0:N2} руб.}" Width="150"/>
             </DataGrid.Columns>
         </DataGrid>
+
+        <DataGrid x:Name="dgProducts" Grid.Row="2" Margin="20"
+          AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+          AlternatingRowBackground="{StaticResource AdditionalColor1}"
+          GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+          Visibility="Collapsed">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Партия" Binding="{Binding BatchId}" Width="80"/>
+                <DataGridTextColumn Header="Артикул изделия" Binding="{Binding ProductArticle}" Width="120"/>
+                <DataGridTextColumn Header="Наименование" Binding="{Binding ProductName}" Width="200"/>
+                <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="100"/>
+                <DataGridTextColumn Header="Длина (см)" Binding="{Binding Length}" Width="100"/>
+                <DataGridTextColumn Header="Ширина (см)" Binding="{Binding Width}" Width="100"/>
+                <DataGridTextColumn Header="Цена за ед." Binding="{Binding ProductionCost, StringFormat={}{0:N2} руб.}" Width="120"/>
+                <DataGridTextColumn Header="Общая стоимость" Binding="{Binding TotalCost, StringFormat={}{0:N2} руб.}" Width="150"/>
+                <DataGridTextColumn Header="Дата производства" Binding="{Binding ProductionDate, StringFormat=dd.MM.yyyy}" Width="120"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
 
         <!-- ======================= КНОПКИ УПРАВЛЕНИЯ ======================= -->
         <Border Grid.Row="3" Background="{StaticResource PrimaryColor2}" Padding="20,10">

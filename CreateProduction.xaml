@@ -121,7 +121,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="Стоимость" Binding="{Binding TotalCost, StringFormat=C}" 
+                            <DataGridTextColumn Header="Стоимость" Binding="{Binding TotalCost, StringFormat={}{0:N2} руб.}" 
                                                Width="1*" IsReadOnly="True"/>
                         </DataGrid.Columns>
                     </DataGrid>
@@ -166,7 +166,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="Стоимость" Binding="{Binding TotalCost, StringFormat=C}" 
+                            <DataGridTextColumn Header="Стоимость" Binding="{Binding TotalCost, StringFormat={}{0:N2} руб.}" 
                                                Width="1*" IsReadOnly="True"/>
                         </DataGrid.Columns>
                     </DataGrid>

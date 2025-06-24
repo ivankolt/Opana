@@ -15,6 +15,7 @@ namespace UchPR
         private string currentUserRole;
         private List<UnitOfMeasurement> units;
         private UnitOfMeasurement selectedUnit;
+        private List<AccessoryCardViewModel> allAccessoriesList = new List<AccessoryCardViewModel>();
 
         public AccessoryListWindow(string userRole)
         {
@@ -116,7 +117,8 @@ namespace UchPR
 
 
                 // ИСПРАВЛЕНО: Привязываем к ListBox вместо DataGrid
-                lbAccessories.ItemsSource = accessoriesList;
+                allAccessoriesList = accessoriesList;
+                lbAccessories.ItemsSource = allAccessoriesList;
 
             }
             catch (Exception ex)
@@ -202,14 +204,12 @@ namespace UchPR
         }
 
         // ИСПРАВЛЕНО: Фильтрация для ListBox вместо DataTable
+
         private void ApplyFilters()
         {
-            if (lbAccessories.ItemsSource == null) return;
+            if (allAccessoriesList == null) return;
 
-            var allAccessories = lbAccessories.ItemsSource as List<AccessoryCardViewModel>;
-            if (allAccessories == null) return;
-
-            var filteredAccessories = allAccessories.AsEnumerable();
+            var filteredAccessories = allAccessoriesList.AsEnumerable();
 
             // Фильтр по поиску
             if (!string.IsNullOrWhiteSpace(txtSearch.Text))
@@ -231,9 +231,16 @@ namespace UchPR
                 }
             }
 
-            // Применяем фильтр
+            // Фильтр по единице измерения (если используется)
+            if (cmbUnit.SelectedIndex > 0)
+            {
+                string selectedUnit = cmbUnit.SelectedItem.ToString();
+                filteredAccessories = filteredAccessories.Where(a => a.unit_name == selectedUnit);
+            }
+
             lbAccessories.ItemsSource = filteredAccessories.ToList();
         }
+
 
         private void BtnRefresh_Click(object sender, RoutedEventArgs e)
         {

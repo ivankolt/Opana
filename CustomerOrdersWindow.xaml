@@ -61,6 +61,7 @@
 
         <!-- Список заказов -->
         <DataGrid x:Name="dgOrders" Grid.Row="1" Margin="20" 
+                  MouseDoubleClick="dgOrders_MouseDoubleClick"
                   AutoGenerateColumns="False" IsReadOnly="True"
                   AlternatingRowBackground="#FFFCD6" FontSize="14">
             <DataGrid.Columns>
