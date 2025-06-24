@@ -34,6 +34,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>logo-01.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
@@ -325,8 +328,8 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="Images\Fabric\Thumbs.db" />
     <None Include="Images\Accessories\Thumbs.db" />
+    <None Include="Images\Fabric\Thumbs.db" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -1577,6 +1580,20 @@
     <Resource Include="Images\Fabric\18475733.jpg" />
     <Resource Include="Images\Fabric\64120.jpg" />
     <Resource Include="Images\Fabric\8341.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Logo\logo-01.jpg" />
+    <Resource Include="Images\Logo\logo-02.jpg" />
+    <Resource Include="Images\Logo\logo-03.jpg" />
+    <Resource Include="Images\Logo\logo-04.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Products\default.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Fabric\default.jpg" />
+  </ItemGroup>
+  <ItemGroup>
     <Resource Include="Images\Accessories\01_7.jpg" />
     <Resource Include="Images\Accessories\01_7Б.jpg" />
     <Resource Include="Images\Accessories\02.jpg" />
@@ -2380,19 +2397,10 @@
     <Resource Include="Images\Accessories\ШКС-2-38-4311.024.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\Logo\logo-01.jpg" />
-    <Resource Include="Images\Logo\logo-02.jpg" />
-    <Resource Include="Images\Logo\logo-03.jpg" />
-    <Resource Include="Images\Logo\logo-04.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Products\default.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Fabric\default.jpg" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\Accessories\default.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="logo-01.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

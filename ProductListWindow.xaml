@@ -142,31 +142,18 @@
 
     <Grid Background="{StaticResource AdditionalColor1}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="80"/>
+            <RowDefinition Height="0"/>
+            <RowDefinition Height="0"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="80"/>
         </Grid.RowDefinitions>
 
         <!-- ======================= ЗАГОЛОВОК С ЛОГОТИПОМ ======================= -->
-        <Border Grid.Row="0" Background="{StaticResource PrimaryColor2}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
 
-                <Image Grid.Column="0" Source="/Images/Logo/logo-01.jpg" 
-                       Width="60" Height="60" Margin="10" Stretch="Uniform"/>
-
-                <TextBlock Grid.Column="1" Text="Каталог изделий" 
-                           VerticalAlignment="Center" FontSize="18" FontWeight="Bold"
-                           Foreground="{StaticResource TextWhite}" Margin="15,0,0,0"/>
-            </Grid>
-        </Border>
 
         <!-- ======================= ПАНЕЛЬ ФИЛЬТРОВ ======================= -->
-        <Border Grid.Row="1" Background="{StaticResource TextWhite}" Padding="20,15">
+        <Border Grid.Row="2" Background="{StaticResource TextWhite}" Padding="20,15">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -197,8 +184,8 @@
         </Border>
 
         <!-- ======================= КАРТОЧКИ ИЗДЕЛИЙ ======================= -->
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" 
-                      HorizontalScrollBarVisibility="Disabled" Margin="10">
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" 
+                      HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,10">
             <ListBox x:Name="lbProducts" 
                      ItemTemplate="{StaticResource ProductCardTemplate}"
                      Background="Transparent"
@@ -222,7 +209,7 @@
         </ScrollViewer>
 
         <!-- ======================= ПАНЕЛЬ УПРАВЛЕНИЯ ======================= -->
-        <Border Grid.Row="3" Background="{StaticResource PrimaryColor2}" Padding="20,15">
+        <Border Grid.Row="4" Background="{StaticResource PrimaryColor2}" Padding="20,15">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button x:Name="btnAdd" Content="Добавить изделие" 
                         Background="{StaticResource TextWhite}" 

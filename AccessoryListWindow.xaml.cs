@@ -72,24 +72,25 @@ namespace UchPR
             {
                 string query = @"
                     SELECT 
-                        a.article,
-                        fan.name AS accessory_name,
-                        ft.name AS accessory_type,
-                        a.width,
-                        a.length,
-                        a.weight,
-                        a.price,
-                        uom.name AS unit_name
-                    FROM 
-                        public.accessory a
-                    LEFT JOIN 
-                        public.furnitureaccessoryname fan ON a.name_id = fan.id
-                    LEFT JOIN 
-                        public.furnituretype ft ON a.type_id = ft.id
-                    LEFT JOIN 
-                        public.unitofmeasurement uom ON a.unit_of_measurement_id = uom.code
-                    ORDER BY 
-                        a.article";
+         a.article,
+         fan.name AS accessory_name,
+         ft.name AS accessory_type,
+         a.width,
+         a.length,
+         a.weight,
+         a.price,
+         uom.name AS unit_name,
+		 a.image
+     FROM 
+         public.accessory a
+     LEFT JOIN 
+         public.furnitureaccessoryname fan ON a.name_id = fan.id
+     LEFT JOIN 
+         public.furnituretype ft ON a.type_id = ft.id
+     LEFT JOIN 
+         public.unitofmeasurement uom ON a.unit_of_measurement_id = uom.code
+     ORDER BY 
+         a.article";
 
                 var accessoriesData = database.GetData(query);
                 var accessoriesList = new List<AccessoryCardViewModel>();
@@ -106,13 +107,13 @@ namespace UchPR
                         weight = row["weight"] != DBNull.Value ? Convert.ToDecimal(row["weight"]) : 0,
                         price = Convert.ToDecimal(row["price"] ?? 0),
                         unit_name = row["unit_name"]?.ToString() ?? "шт",
-                        // Путь к изображению
-                        ImagePath = GetAccessoryImagePath(row["article"].ToString())
-
+                        // Убираем пробелы в начале и конце имени файла
+                        ImagePath = $"pack://application:,,,/Images/Accessories/{(row["image"]?.ToString().Trim() ?? "default.jpg")}"
                     };
 
                     accessoriesList.Add(accessory);
                 }
+
 
                 // ИСПРАВЛЕНО: Привязываем к ListBox вместо DataGrid
                 lbAccessories.ItemsSource = accessoriesList;
@@ -128,39 +129,50 @@ namespace UchPR
         // Метод для получения пути к изображению фурнитуры
         private string GetAccessoryImagePath(string accessoryArticle)
         {
-            try
+            string accessoryArticleTrim = accessoryArticle.TrimStart();
+            string[] extensions = { ".jpg", ".jpeg", ".png", ".bmp" };
+
+            foreach (string ext in extensions)
             {
-                string[] extensions = { ".jpg", ".jpeg", ".png", ".bmp" };
-
-                foreach (string ext in extensions)
+                string resourcePath = $"pack://application:,,,/Images/Accessories/{accessoryArticleTrim}{ext}";
+                try
                 {
-                    string resourcePath = $"pack://application:,,,/Images/Accessories/{accessoryArticle}{ext}";
-
-                    // Проверяем существование ресурса
-                    try
+                    var uri = new Uri(resourcePath, UriKind.Absolute);
+                    var resourceInfo = Application.GetResourceStream(uri);
+                    if (resourceInfo != null)
                     {
-                        var uri = new Uri(resourcePath);
-                        var resourceInfo = Application.GetResourceStream(uri);
-                        if (resourceInfo != null)
-                        {
-                            resourceInfo.Stream.Close();
-                            return resourcePath;
-                        }
-                    }
-                    catch
-                    {
-                        continue;
+                        resourceInfo.Stream.Close();
+                        return resourcePath;
                     }
                 }
+                catch
+                {
+                    continue;
+                }
+            }
 
-                // Возвращаем изображение по умолчанию
-                return "pack://application:,,,/Images/Accessories/default.jpg";
+            // Если ничего не найдено, обновляем поле image на "default.jpg" в accessory
+            try
+            {
+                using (var conn = new Npgsql.NpgsqlConnection(database.connectionString))
+                {
+                    conn.Open();
+                    string sql = "UPDATE accessory SET image = @img WHERE article = @article";
+                    using (var cmd = new Npgsql.NpgsqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@img", "default.jpg");
+                        cmd.Parameters.AddWithValue("@article", accessoryArticleTrim);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ Ошибка: {ex.Message}");
-                return string.Empty;
+                System.Diagnostics.Debug.WriteLine($"Ошибка обновления image для {accessoryArticleTrim}: {ex.Message}");
             }
+
+            // Возвращаем изображение по умолчанию
+            return "pack://application:,,,/Images/Accessories/default.jpg";
         }
 
 

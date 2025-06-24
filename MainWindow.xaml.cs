@@ -57,12 +57,12 @@ namespace UchPR
             btnProductList.Visibility = Visibility.Collapsed;
             btnOrders.Visibility = Visibility.Collapsed;
             btnReports.Visibility = Visibility.Collapsed;
-            btnCatalog.Visibility = Visibility.Collapsed;
+        
             btnMyOrders.Visibility = Visibility.Collapsed;
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
             btnInventar2.Visibility = Visibility.Collapsed;
             btnInventar.Visibility = Visibility.Collapsed;
-            btnReports.Visibility = Visibility.Collapsed;
+
             btnCreateProduction.Visibility = Visibility.Collapsed;
            
 
@@ -72,6 +72,7 @@ namespace UchPR
         {
             btnWarehouse.Visibility = Visibility.Visible;
             btnFabricList.Visibility = Visibility.Visible;
+            btnProductDesigner.Visibility = Visibility.Collapsed;
             btnAccessoryList.Visibility = Visibility.Visible;
             btnMaterialReceipt.Visibility = Visibility.Visible; // Показываем только кладовщику
             btnInventar.Visibility = Visibility.Visible;
@@ -85,13 +86,13 @@ namespace UchPR
         {
             // Менеджер видит изделия, конструктор и заказы
             btnProductList.Visibility = Visibility.Visible;
-            btnProductDesigner.Visibility = Visibility.Visible; // ДОБАВЛЕНО
+            btnProductDesigner.Visibility = Visibility.Collapsed; // ДОБАВЛЕНО
             btnOrders.Visibility = Visibility.Visible;
             btnWarehouse.Visibility = Visibility.Visible; // Доступ к складу только для просмотра
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
             btnInventar2.Visibility = Visibility.Collapsed;
             btnInventar.Visibility = Visibility.Collapsed;
-            btnReports.Visibility = Visibility.Collapsed;
+            btnReports.Visibility = Visibility.Visible;
             btnCreateProduction.Visibility = Visibility.Visible;
             btnOrders2.Visibility = Visibility.Collapsed;
         }
@@ -101,7 +102,7 @@ namespace UchPR
             // Руководитель видит все, включая отчеты
             btnWarehouse.Visibility = Visibility.Visible;
             btnProductList.Visibility = Visibility.Visible;
-            btnProductDesigner.Visibility = Visibility.Visible; // ДОБАВЛЕНО
+            btnProductDesigner.Visibility = Visibility.Collapsed; // ДОБАВЛЕНО
             btnOrders.Visibility = Visibility.Visible;
             btnReports.Visibility = Visibility.Visible;
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
@@ -154,7 +155,7 @@ namespace UchPR
         private void ConfigureCustomerNavigation()
         {
             // Заказчик видит каталог, свои заказы и конструктор
-            btnCatalog.Visibility = Visibility.Visible;
+      
             btnMyOrders.Visibility = Visibility.Visible;
             btnProductDesigner.Visibility = Visibility.Visible; // ДОБАВЛЕНО для заказчиков
             btnMaterialReceipt.Visibility = Visibility.Collapsed;
@@ -307,7 +308,7 @@ namespace UchPR
         {
             var buttons = new[] { btnWarehouse, btnFabricList, btnAccessoryList, 
                                  btnProductList, btnOrders, btnReports, 
-                                 btnCatalog, btnMyOrders };
+                                btnMyOrders };
             
             foreach (var button in buttons)
             {

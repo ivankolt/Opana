@@ -23,6 +23,7 @@ namespace UchPR
             cbTypeFilter.ItemsSource = new[] { "Все", "Ткань", "Фурнитура", "Изделие" };
             cbTypeFilter.SelectedIndex = 0;
             LoadRemains();
+            LoadWriteOffReport();
         }
 
         // Загрузка остатков
@@ -88,61 +89,183 @@ namespace UchPR
             dgRemains.ItemsSource = remainItems;
         }
         // Загрузка движения за период
+        private ObservableCollection<WriteOffReportItem> writeOffItems;
+
+        private void LoadWriteOffReport()
+        {
+            writeOffItems = new ObservableCollection<WriteOffReportItem>();
+
+            DateTime? fromDate = dpStart.SelectedDate;
+            DateTime? toDate = dpEnd.SelectedDate;
+
+            string sql = @"
+        SELECT
+            mw.materialtype AS type,
+            mw.materialname AS name,
+            mw.quantity AS quantity,
+            uom.name AS unit,
+            mw.cost AS cost,
+            mw.writeoffdate AS date
+       
+        FROM material_writeoffs mw
+        LEFT JOIN unitofmeasurement uom ON uom.code = (
+            SELECT unit_id FROM material_units
+            WHERE material_article = mw.materialname AND material_type = mw.materialtype AND is_primary = true LIMIT 1
+        )
+        WHERE (@fromDate IS NULL OR mw.writeoffdate >= @fromDate)
+          AND (@toDate IS NULL OR mw.writeoffdate <= @toDate)
+
+        UNION ALL
+
+        SELECT
+            CASE
+                WHEN p.article IS NOT NULL THEN 'Изделие'
+                WHEN f.article IS NOT NULL THEN 'Ткань'
+                WHEN a.article IS NOT NULL THEN 'Фурнитура'
+                ELSE 'Неизвестно'
+            END AS type,
+            COALESCE(pn.name, fn.name, fan.name, sl.material_article) AS name,
+            sl.quantity_scrapped AS quantity,
+            uom.name AS unit,
+            sl.cost_scrapped AS cost,
+            sl.log_date AS date
+        FROM scraplog sl
+        LEFT JOIN product p ON p.article = sl.material_article
+        LEFT JOIN productname pn ON p.name_id = pn.id
+        LEFT JOIN fabric f ON f.article::text = sl.material_article
+        LEFT JOIN fabricname fn ON f.name_id = fn.code
+        LEFT JOIN accessory a ON a.article::text = sl.material_article
+        LEFT JOIN furnitureaccessoryname fan ON a.name_id = fan.id
+        LEFT JOIN unitofmeasurement uom ON uom.code = sl.unit_of_measurement_id
+        WHERE (@fromDate IS NULL OR sl.log_date >= @fromDate)
+          AND (@toDate IS NULL OR sl.log_date <= @toDate)
+        ORDER BY date DESC, type, name;
+        ";
+
+            var dt = database.GetData(sql, new[] {
+        new NpgsqlParameter("@fromDate", (object)fromDate ?? DBNull.Value),
+        new NpgsqlParameter("@toDate", (object)toDate ?? DBNull.Value)
+    });
+
+            foreach (DataRow row in dt.Rows)
+            {
+                writeOffItems.Add(new WriteOffReportItem
+                {
+                    Type = row["type"].ToString(),
+                    Name = row["name"].ToString(),
+                    Quantity = Convert.ToDecimal(row["quantity"]),
+                    Unit = row["unit"].ToString(),
+                    Cost = Convert.ToDecimal(row["cost"]),
+                    Date = Convert.ToDateTime(row["date"])
+                   
+                });
+            }
+            dgWriteOffs.ItemsSource = writeOffItems;
+        }
+
         private void LoadMovement()
         {
-            if (dpStart.SelectedDate == null || dpEnd.SelectedDate == null) return;
-
-            DateTime dateStart = dpStart.SelectedDate.Value.Date;
-            DateTime dateEnd = dpEnd.SelectedDate.Value.Date;
-
             movementItems = new ObservableCollection<StockMovementItem>();
 
             string sql = @"
-        SELECT 'Ткань' AS type, 
-               CAST(f.article AS varchar) AS article, 
-               fn.name AS name, 
-               u.name AS unit,
-               0 AS start_qty,
-               0 AS incoming,
-               0 AS outgoing,
-               0 AS end_qty
-        FROM fabric f
-        JOIN fabricname fn ON f.name_id = fn.code
-        JOIN unitofmeasurement u ON f.unit_of_measurement_id = u.code
+SELECT
+    t.type,
+    t.article,
+    t.name,
+    t.unit,
+    -- Начальный остаток (до периода)
+    COALESCE((
+        SELECT SUM(COALESCE(rl.quantity,0)) - SUM(COALESCE(mc.quantity,0))
+        FROM receiptlines rl
+        JOIN receipts r ON rl.receiptid = r.receiptid
+        LEFT JOIN material_consumption mc ON mc.material_article = rl.materialid AND mc.material_type = rl.materialtype AND mc.consumption_date < '2025-01-01'
+        WHERE rl.materialtype = t.type AND rl.materialid = t.article AND r.docdate < '2025-01-01'
+    ), 0) AS start_qty,
+    -- Приход за период
+    COALESCE((
+        SELECT SUM(rl.quantity)
+        FROM receiptlines rl
+        JOIN receipts r ON rl.receiptid = r.receiptid
+        WHERE rl.materialtype = t.type AND rl.materialid = t.article AND r.docdate >= '2025-01-01' AND r.docdate <= '2025-07-01'
+    ), 0) AS incoming,
+    -- Расход за период
+    COALESCE((
+        SELECT SUM(mc.quantity)
+        FROM material_consumption mc
+        WHERE mc.material_type = t.type AND mc.material_article = t.article AND mc.consumption_date >= '2025-01-01' AND mc.consumption_date <= '2025-07-01'
+    ), 0) AS outgoing,
+    -- Конечный остаток (старт + приход - расход)
+    (
+        COALESCE((
+            SELECT SUM(COALESCE(rl.quantity,0)) - SUM(COALESCE(mc.quantity,0))
+            FROM receiptlines rl
+            JOIN receipts r ON rl.receiptid = r.receiptid
+            LEFT JOIN material_consumption mc ON mc.material_article = rl.materialid AND mc.material_type = rl.materialtype AND mc.consumption_date < '2025-01-01'
+            WHERE rl.materialtype = t.type AND rl.materialid = t.article AND r.docdate < '2025-01-01'
+        ), 0)
+        +
+        COALESCE((
+            SELECT SUM(rl.quantity)
+            FROM receiptlines rl
+            JOIN receipts r ON rl.receiptid = r.receiptid
+            WHERE rl.materialtype = t.type AND rl.materialid = t.article AND r.docdate >= '2025-01-01' AND r.docdate <= '2025-07-01'
+        ), 0)
+        -
+        COALESCE((
+            SELECT SUM(mc.quantity)
+            FROM material_consumption mc
+            WHERE mc.material_type = t.type AND mc.material_article = t.article AND mc.consumption_date >= '2025-01-01' AND mc.consumption_date <= '2025-07-01'
+        ), 0)
+    ) AS end_qty
+FROM (
+    -- Все ткани
+    SELECT 'fabric' AS type, CAST(f.article AS varchar) AS article, fn.name AS name, u.name AS unit
+    FROM fabric f
+    JOIN fabricname fn ON f.name_id = fn.code
+    JOIN unitofmeasurement u ON f.unit_of_measurement_id = u.code
 
-        UNION ALL
+    UNION ALL
 
-        SELECT 'Фурнитура', 
-               a.article, 
-               fan.name, 
-               u.name,
-               0 AS start_qty,
-               0 AS incoming,
-               0 AS outgoing,
-               0 AS end_qty
-        FROM accessory a
-        JOIN furnitureaccessoryname fan ON a.name_id = fan.id
-        JOIN unitofmeasurement u ON a.unit_of_measurement_id = u.code
+    -- Все фурнитуры
+    SELECT 'accessory' AS type, a.article, fan.name, u.name
+    FROM accessory a
+    JOIN furnitureaccessoryname fan ON a.name_id = fan.id
+    JOIN unitofmeasurement u ON a.unit_of_measurement_id = u.code
+) t
+WHERE
+    (
+        COALESCE((
+            SELECT SUM(rl.quantity)
+            FROM receiptlines rl
+            JOIN receipts r ON rl.receiptid = r.receiptid
+            WHERE rl.materialtype = t.type AND rl.materialid = t.article
+        ), 0) > 0
+        OR
+        COALESCE((
+            SELECT SUM(mc.quantity)
+            FROM material_consumption mc
+            WHERE mc.material_type = t.type AND mc.material_article = t.article
+        ), 0) > 0
+        OR
+        (
+            COALESCE((
+                SELECT SUM(rl.quantity)
+                FROM receiptlines rl
+                JOIN receipts r ON rl.receiptid = r.receiptid
+                WHERE rl.materialtype = t.type AND rl.materialid = t.article
+            ), 0)
+            -
+            COALESCE((
+                SELECT SUM(mc.quantity)
+                FROM material_consumption mc
+                WHERE mc.material_type = t.type AND mc.material_article = t.article
+            ), 0)
+        ) != 0
+    )
+ORDER BY t.type, t.name;
+    ";
 
-        UNION ALL
-
-        SELECT 'Изделие', 
-               p.article, 
-               pn.name, 
-               u.name,
-               0 AS start_qty,
-               0 AS incoming,
-               0 AS outgoing,
-               0 AS end_qty
-        FROM product p
-        JOIN productname pn ON p.name_id = pn.id
-        JOIN unitofmeasurement u ON p.unit_of_measurement_id = u.code
-        ORDER BY type, name";
-
-            var dt = database.GetData(sql, new[] {
-        new NpgsqlParameter("@dateStart", dateStart),
-        new NpgsqlParameter("@dateEnd", dateEnd)
-    });
+            var dt = database.GetData(sql);
 
             foreach (DataRow row in dt.Rows)
             {
@@ -196,6 +319,16 @@ namespace UchPR
         public decimal Quantity { get; set; }
         public decimal TotalCost { get; set; }
     }
+    public class WriteOffReportItem
+    {
+        public string Type { get; set; }
+        public string Name { get; set; }
+        public decimal Quantity { get; set; }
+        public string Unit { get; set; }
+        public decimal Cost { get; set; }
+        public DateTime Date { get; set; }
+    }
+
 
     public class StockMovementItem
     {

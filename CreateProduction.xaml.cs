@@ -246,6 +246,74 @@ namespace UchPR
                 MessageBox.Show($"Ошибка завершения производства: {ex.Message}");
             }
         }
+        private void InsertMaterialConsumption(NpgsqlConnection connection, NpgsqlTransaction transaction, int quantity)
+        {
+            // Для тканей
+            foreach (var fabric in fabricItems)
+            {
+                string insertQuery = @"INSERT INTO material_consumption
+            (material_type, material_article, product_article, quantity, unit_of_measurement_id, consumption_date, operation_type)
+            VALUES (@material_type, @material_article, @product_article, @quantity, @unit_id, CURRENT_TIMESTAMP, @operation_type)";
+
+                using (var cmd = new NpgsqlCommand(insertQuery, connection, transaction))
+                {
+                    cmd.Parameters.AddWithValue("@material_type", "fabric");
+                    cmd.Parameters.AddWithValue("@material_article", fabric.FabricArticle);
+                    cmd.Parameters.AddWithValue("@product_article", selectedProductArticle);
+                    cmd.Parameters.AddWithValue("@quantity", fabric.ActualQuantity);
+                    // Получить unit_of_measurement_id из справочника ткани:
+                    int unitId = GetFabricUnitId(fabric.FabricArticle, connection, transaction);
+                    cmd.Parameters.AddWithValue("@unit_id", unitId);
+                    cmd.Parameters.AddWithValue("@operation_type", "production");
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            // Для фурнитуры
+            foreach (var accessory in accessoryItems)
+            {
+                string insertQuery = @"INSERT INTO material_consumption
+            (material_type, material_article, product_article, quantity, unit_of_measurement_id, consumption_date, operation_type)
+            VALUES (@material_type, @material_article, @product_article, @quantity, @unit_id, CURRENT_TIMESTAMP, @operation_type)";
+
+                using (var cmd = new NpgsqlCommand(insertQuery, connection, transaction))
+                {
+                    cmd.Parameters.AddWithValue("@material_type", "accessory");
+                    cmd.Parameters.AddWithValue("@material_article", accessory.AccessoryArticle);
+                    cmd.Parameters.AddWithValue("@product_article", selectedProductArticle);
+                    cmd.Parameters.AddWithValue("@quantity", accessory.ActualQuantity);
+                    // Получить unit_of_measurement_id из справочника фурнитуры:
+                    int unitId = GetAccessoryUnitId(accessory.AccessoryArticle, connection, transaction);
+                    cmd.Parameters.AddWithValue("@unit_id", unitId);
+                    cmd.Parameters.AddWithValue("@operation_type", "production");
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        // Получить unit_id для ткани
+        private int GetFabricUnitId(string fabricArticle, NpgsqlConnection connection, NpgsqlTransaction transaction)
+        {
+            string sql = "SELECT unit_of_measurement_id FROM fabric WHERE article = @article";
+            using (var cmd = new NpgsqlCommand(sql, connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@article", int.Parse(fabricArticle));
+                var result = cmd.ExecuteScalar();
+                return result != null ? Convert.ToInt32(result) : 1; // 1 — запасной вариант
+            }
+        }
+
+        // Получить unit_id для фурнитуры
+        private int GetAccessoryUnitId(string accessoryArticle, NpgsqlConnection connection, NpgsqlTransaction transaction)
+        {
+            string sql = "SELECT unit_of_measurement_id FROM accessory WHERE article = @article";
+            using (var cmd = new NpgsqlCommand(sql, connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@article", accessoryArticle);
+                var result = cmd.ExecuteScalar();
+                return result != null ? Convert.ToInt32(result) : 1;
+            }
+        }
 
         private bool ValidateProduction()
         {
@@ -297,6 +365,9 @@ namespace UchPR
 
                         // 2. Оприходование готовых изделий
                         AddFinishedProductsToWarehouse(connection, transaction);
+
+                        int quantity = int.Parse(txtQuantity.Text);
+                        InsertMaterialConsumption(connection, transaction, quantity);
 
                         // 3. Учет обрезков по scrap_threshold
                         ProcessScrapsWithThreshold(connection, transaction);

@@ -281,12 +281,12 @@ namespace UchPR
                     if (selectedUnit != null)
                     {
                         row["ConvertedQuantity"] = stockQuantity * selectedUnit.ConversionFactor;
-                        row["SelectedUnitName"] = selectedUnit.Name;
+                        row["DisplayUnit"] = selectedUnit.Name;
                     }
                     else
                     {
                         row["ConvertedQuantity"] = stockQuantity;
-                        row["SelectedUnitName"] = row["AccountingUnitName"]?.ToString() ?? "";
+                        row["DisplayUnit"] = row["AccountingUnitName"]?.ToString() ?? "";
                     }
 
                     // Определение статуса остатка

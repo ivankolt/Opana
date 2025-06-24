@@ -158,9 +158,9 @@
                                                Width="1.2*" IsReadOnly="True"/>
                             <DataGridTextColumn Header="Разница (кв.м)" Binding="{Binding DifferenceQuantity, StringFormat=F2}" 
                                                Width="1*" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Средняя цена" Binding="{Binding AveragePurchasePrice, StringFormat=C}" 
+                            <DataGridTextColumn Header="Средняя цена" Binding="{Binding AveragePurchasePrice, StringFormat={}{0:N2} руб.}"
                                                Width="1*" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Сумма разницы" Binding="{Binding DifferenceAmount, StringFormat=C}" 
+                            <DataGridTextColumn Header="Сумма разницы" Binding="{Binding DifferenceAmount, StringFormat={}{0:N2} руб.}" 
                                                Width="1.2*" IsReadOnly="True"/>
                         </DataGrid.Columns>
                     </DataGrid>
@@ -236,9 +236,9 @@
                                                Width="1.2*" IsReadOnly="True"/>
                             <DataGridTextColumn Header="Разница (шт)" Binding="{Binding DifferenceQuantity}" 
                                                Width="1*" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Средняя цена" Binding="{Binding AveragePurchasePrice, StringFormat=C}" 
+                            <DataGridTextColumn Header="Средняя цена" Binding="{Binding AveragePurchasePrice, StringFormat={}{0:N2} руб.}" 
                                                Width="1*" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Сумма разницы" Binding="{Binding DifferenceAmount, StringFormat=C}" 
+                            <DataGridTextColumn Header="Сумма разницы" Binding="{Binding DifferenceAmount, StringFormat={}{0:N2} руб.}" 
                                                Width="1.2*" IsReadOnly="True"/>
                         </DataGrid.Columns>
                     </DataGrid>
@@ -314,9 +314,9 @@
                                                Width="1.2*" IsReadOnly="True"/>
                             <DataGridTextColumn Header="Разница (шт)" Binding="{Binding DifferenceQuantity}" 
                                                Width="1*" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Средняя себестоимость" Binding="{Binding AverageProductionCost, StringFormat=C}" 
+                            <DataGridTextColumn Header="Средняя себестоимость" Binding="{Binding AverageProductionCost, StringFormat={}{0:N2} руб.}" 
                                                Width="1.2*" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Сумма разницы" Binding="{Binding DifferenceAmount, StringFormat=C}" 
+                            <DataGridTextColumn Header="Сумма разницы" Binding="{Binding DifferenceAmount, StringFormat={}{0:N2} руб.}" 
                                                Width="1.2*" IsReadOnly="True"/>
                         </DataGrid.Columns>
                     </DataGrid>

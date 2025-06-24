@@ -97,8 +97,13 @@ WHERE op.order_number = @number AND op.order_date = @date";
             {
                 MessageBox.Show($"Ошибка загрузки деталей заказа: {ex.Message}");
             }
+            UpdateTotalCost();
         }
-
+        private void UpdateTotalCost()
+        {
+            decimal total = orderItems.Sum(item => item.TotalPrice);
+            txtTotalCost.Text = $"Итоговая стоимость: {total:N2} руб.";
+        }
         private void SetupManagerControls()
         {
             // Кнопка "Далее" активна только если статус НЕ "Готов" и НЕ "К оплате"

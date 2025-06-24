@@ -62,18 +62,16 @@
 
                 <Button x:Name="btnCreateProduction" Content="Создание изделий" 
          Width="160" Height="35" Margin="5" Click="btnCreateProduction_Click"
-         Background="#FFFFFF" FontWeight="Bold" Foreground="#000000"/>
+          Background="White" FontWeight="SemiBold" Foreground="#000000"/>
+
+                <Button x:Name="btnInventar" Content="Инвентаризация" 
+        Width="160" Height="35" Margin="5" Click="BtnInventar_Click"
+        Background="White" FontWeight="SemiBold" Foreground="#000000"/>
 
 
-
-                <Button x:Name="btnInventar" Content="Инвентарь" 
-         Width="160" Height="35" Margin="5" Click="BtnInventar_Click"
-         Background="#FFFFFF" FontWeight="Bold" Foreground="#000000"/>
-
-
-                <Button x:Name="btnInventar2" Content="Инвентарь" 
+                <Button x:Name="btnInventar2" Content="Инвентаризация" 
          Width="160" Height="35" Margin="5" Click="BtnInventar_Click2"
-         Background="#FFFFFF" FontWeight="Bold" Foreground="#000000"/>
+          Background="White" FontWeight="SemiBold" Foreground="#000000"/>
 
                 <Button x:Name="btnOrders" Content="Заказы" 
                         Width="120" Height="35" Margin="5" Click="BtnOrders_Click"
@@ -88,14 +86,9 @@
                         Width="120" Height="35" Margin="5" Click="BtnReports_Click"
                         Background="White" FontWeight="SemiBold"/>
 
-                <!-- Кнопки для заказчика -->
-                <Button x:Name="btnCatalog" Content="Каталог" 
-                        Width="120" Height="35" Margin="5" Click="BtnCatalog_Click"
-                        Background="White" FontWeight="SemiBold"/>
-
                 <Button x:Name="btnMaterialReceipt"
                         Content="Поступление материалов" Background="White" FontWeight="SemiBold"
-                        Width="180" Height="40" Margin="5"
+                        Width="180" Height="35" Margin="5"
                         Click="BtnMaterialReceipt_Click"/>
 
                 <Button x:Name="btnMyOrders" Content="Мои заказы" 

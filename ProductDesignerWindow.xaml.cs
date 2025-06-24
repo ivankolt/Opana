@@ -510,6 +510,34 @@ namespace UchPR
 
             AddAccessoryToCanvas(selectedAccessory);
         }
+        private string SaveCanvasAsImage(string article)
+        {
+            // Получаем путь к папке проекта (не bin\Debug)
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string projectRoot = System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, "..", ".."));
+            string imagesDir = System.IO.Path.Combine(projectRoot, "Images", "Products");
+
+            if (!Directory.Exists(imagesDir))
+                Directory.CreateDirectory(imagesDir);
+
+            string fileName = $"{article}.jpg";
+            string fullPath = System.IO.Path.Combine(imagesDir, fileName);
+
+            double width = DesignCanvas.ActualWidth;
+            double height = DesignCanvas.ActualHeight;
+
+            var rtb = new RenderTargetBitmap((int)width, (int)height, 96d, 96d, PixelFormats.Pbgra32);
+            rtb.Render(DesignCanvas);
+
+            var encoder = new JpegBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(rtb));
+            using (var fs = new FileStream(fullPath, FileMode.Create))
+            {
+                encoder.Save(fs);
+            }
+
+            return fileName; // В БД сохраняем только имя файла!
+        }
 
         private void AddAccessoryToCanvas(MaterialItem accessory)
         {
@@ -587,15 +615,16 @@ namespace UchPR
                     {
                         // 1. Генерация артикула
                         string generatedArticle = GenerateProductArticle();
+                        string imagePath = SaveCanvasAsImage(generatedArticle); // ← вот здесь
 
                         // 2. Получение параметров изделия
-                     
+
 
                         int selectedFabricArticle = 0;
                         if (cbFabric.SelectedItem is MaterialItem fabric)
                             int.TryParse(fabric.Id, out selectedFabricArticle);
 
-                        string imagePath = ""; // или путь к изображению, если есть
+                       // или путь к изображению, если есть
                         string comment = ""; // или tbComment.Text, если поле есть
                         decimal width = decimal.TryParse(tbWidth.Text, out var w) ? w : 0;
                         decimal length = decimal.TryParse(tbHeight.Text, out var l) ? l : 0;
@@ -614,16 +643,16 @@ namespace UchPR
                         int selectedNameId = GetOrCreateProductNameId(productName, connection, transaction);
                         // 5. Вставка изделия
                         string sqlProduct = @"
-                    INSERT INTO product 
-                    (article, name_id, width, length, image, comment, unit_of_measurement_id, price)
-                    VALUES (@article, @name_id, @width, @length, @image, @comment, @unit, @price)";
+    INSERT INTO product 
+    (article, name_id, width, length, image, comment, unit_of_measurement_id, price)
+    VALUES (@article, @name_id, @width, @length, @image, @comment, @unit, @price)";
                         using (var cmd = new NpgsqlCommand(sqlProduct, connection, transaction))
                         {
                             cmd.Parameters.AddWithValue("@article", generatedArticle);
                             cmd.Parameters.AddWithValue("@name_id", selectedNameId);
                             cmd.Parameters.AddWithValue("@width", width);
                             cmd.Parameters.AddWithValue("@length", length);
-                            cmd.Parameters.AddWithValue("@image", (object)imagePath ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@image", imagePath ?? (object)DBNull.Value); // ← путь к картинке
                             cmd.Parameters.AddWithValue("@comment", comment ?? "");
                             cmd.Parameters.AddWithValue("@unit", 1); // штуки
                             cmd.Parameters.AddWithValue("@price", price);

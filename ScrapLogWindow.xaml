@@ -82,7 +82,7 @@
                                    Binding="{Binding UnitName}" 
                                    Width="1*"/>
                 <DataGridTextColumn Header="Стоимость" 
-                                   Binding="{Binding CostScrap, StringFormat=C}" 
+                                   Binding="{Binding CostScrap, StringFormat={}{0:N2} руб.}"  
                                    Width="1.5*"/>
                 <DataGridTextColumn Header="Списал" 
                                    Binding="{Binding WrittenOffBy}" 
