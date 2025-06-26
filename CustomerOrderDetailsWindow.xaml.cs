@@ -5,15 +5,8 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+
 
 namespace UchPR
 {
@@ -57,17 +50,14 @@ namespace UchPR
       
         private void BtnShowCutting_Click(object sender, RoutedEventArgs e)
         {
-            // Получаем все изделия в заказе
             var products = dgProducts.ItemsSource as IEnumerable<OrderProductItem>;
             if (products == null) return;
 
-            // Преобразуем к списку OrderItem для передачи в CuttingWindow
             var orderItems = products.Select(p => new OrderItem
             {
                 ProductArticle = p.ProductArticle,
                 ProductName = p.ProductName,
                 Quantity = p.Quantity,
-                // Если есть размеры изделия, добавьте их:
                 Length = (decimal)GetProductLength(p.ProductArticle),
                 Width = (decimal)GetProductWidth(p.ProductArticle)
             }).ToList();
@@ -78,11 +68,8 @@ namespace UchPR
             cuttingWindow.ShowDialog();
         }
 
-        // Пример методов для получения размеров изделия (добавьте свою реализацию)
         private double GetProductLength(string article)
         {
-            // Запросите из базы длину изделия по артикулу
-            // Например:
             var dt = database.GetData("SELECT length FROM product WHERE article=@a", new[] { new NpgsqlParameter("@a", article) });
             return dt.Rows.Count > 0 ? Convert.ToDouble(dt.Rows[0]["length"]) : 0;
         }

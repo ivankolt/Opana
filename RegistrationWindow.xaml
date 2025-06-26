@@ -5,8 +5,6 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent">
-
-    <!-- Ресурсы и стили взяты из предыдущего окна для консистентности -->
     <Window.Resources>
         <SolidColorBrush x:Key="PrimaryColor1" Color="#B5D5CA"/>
         <SolidColorBrush x:Key="PrimaryColor2" Color="#E0A9AF"/>
@@ -51,12 +49,9 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="80"/>
-                <!-- Заголовок -->
                 <RowDefinition Height="*"/>
-                <!-- Основной контент -->
             </Grid.RowDefinitions>
 
-            <!-- ======================= ЗАГОЛОВОК ======================= -->
             <Border Grid.Row="0" Background="{StaticResource PrimaryColor1}">
                 <Grid>
                     <Grid.ColumnDefinitions>

@@ -252,7 +252,6 @@ namespace UchPR
 
                         if (currentOrderNumber == null)
                         {
-                            // Создаем новый заказ
                             string insertOrderQuery = @"
                                 INSERT INTO orders (date, execution_stage, customer_login, customer_password, cost)
                                 VALUES (@date, @status::order_status, @customer_login, @customer_password, @cost)
@@ -270,7 +269,6 @@ namespace UchPR
                         }
                         else
                         {
-                            // Обновляем существующий заказ
                             string updateOrderQuery = @"
                                 UPDATE orders SET execution_stage = @status::order_status, cost = @cost
                                 WHERE number = @number AND date = @date";
@@ -281,7 +279,6 @@ namespace UchPR
                                 new NpgsqlParameter("@date", currentOrderDate)
                             });
 
-                            // Удаляем старые позиции заказа, чтобы перезаписать новыми
                             string deleteItemsQuery = "DELETE FROM orderedproducts WHERE order_number = @number AND order_date = @date";
                             database.ExecuteNonQueryWithTransaction(deleteItemsQuery, connection, transaction, new[] {
                                 new NpgsqlParameter("@number", currentOrderNumber.Value),
@@ -289,7 +286,6 @@ namespace UchPR
                             });
                         }
 
-                        // Сохраняем актуальные позиции заказа
                         foreach (var item in orderItems)
                         {
                             string insertItemQuery = @"
@@ -305,7 +301,6 @@ namespace UchPR
 
                         transaction.Commit();
 
-                        // Обновляем интерфейс
                         txtOrderNumber.Text = currentOrderNumber.ToString();
                         txtOrderStatus.Text = status;
                         currentStatus = status;

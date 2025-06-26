@@ -12,7 +12,6 @@
         <SolidColorBrush x:Key="AltRowColor" Color="#FFFCD6"/>
         <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
         <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
-        <!-- Стиль для DataGrid -->
         <Style TargetType="DataGrid">
             <Setter Property="AlternatingRowBackground" Value="{StaticResource AltRowColor}"/>
             <Setter Property="GridLinesVisibility" Value="All"/>
@@ -20,7 +19,6 @@
             <Setter Property="RowHeight" Value="32"/>
             <Setter Property="HeadersVisibility" Value="Column"/>
         </Style>
-        <!-- Стиль для GroupBox -->
         <Style TargetType="GroupBox">
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="14"/>
@@ -29,7 +27,6 @@
             <Setter Property="BorderBrush" Value="#B5D5CA"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
-        <!-- Стиль для кнопок -->
         <Style TargetType="Button">
             <Setter Property="Background" Value="{StaticResource PrimaryColor}"/>
             <Setter Property="Foreground" Value="{StaticResource TextBlack}"/>
@@ -48,7 +45,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Шапка с логотипом и заголовком -->
         <Border Grid.Row="0" Background="{StaticResource PrimaryColor}" CornerRadius="0,0,12,12">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -62,7 +58,6 @@
             </Grid>
         </Border>
 
-        <!-- Фильтры -->
         <Border Grid.Row="1" Background="{StaticResource AccentColor}" CornerRadius="12" Margin="20,10,20,0" Padding="10">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Статус:" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="14"/>
@@ -73,7 +68,6 @@
             </StackPanel>
         </Border>
 
-        <!-- Таблица документов -->
         <DataGrid x:Name="dgDocuments" Grid.Row="1" Margin="10"
 AutoGenerateColumns="False" IsReadOnly="True"
 SelectionChanged="DgDocuments_SelectionChanged">
@@ -87,14 +81,12 @@ SelectionChanged="DgDocuments_SelectionChanged">
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Детали и кнопки -->
         <Border Grid.Row="3" Background="{StaticResource AltRowColor}" Padding="15" CornerRadius="12" Margin="20,10,20,20">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
                     <ColumnDefinition Width="3*"/>
                 </Grid.ColumnDefinitions>
-                <!-- Детализация документа -->
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="Детализация расхождений" FontWeight="Bold" FontSize="15"/>
                     <TabControl x:Name="tabDetails" Margin="0,10,0,0" Height="180">
@@ -121,7 +113,6 @@ SelectionChanged="DgDocuments_SelectionChanged">
                         </TabItem>
                     </TabControl>
                 </StackPanel>
-                <!-- Комментарий и кнопки -->
                 <StackPanel Grid.Column="1" Margin="25,0,0,0">
                     <TextBlock Text="Комментарий руководителя (обязательно для утверждения):" FontWeight="Bold" FontSize="14"/>
                     <TextBox x:Name="txtDirectorComment" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,5,0,5" FontSize="14"/>

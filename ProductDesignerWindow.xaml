@@ -5,7 +5,6 @@
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
-        <!-- Цвета согласно WorldSkills StyleGuide -->
         <SolidColorBrush x:Key="PrimaryColor1" Color="#B5D5CA"/>
         <SolidColorBrush x:Key="PrimaryColor2" Color="#E0A9AF"/>
         <SolidColorBrush x:Key="AdditionalColor1" Color="#D1EEFC"/>
@@ -13,7 +12,6 @@
         <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
 
-        <!-- Стили для элементов -->
         <Style TargetType="Button" x:Key="PrimaryButton">
             <Setter Property="Background" Value="{StaticResource PrimaryColor1}"/>
             <Setter Property="Foreground" Value="{StaticResource TextBlack}"/>
@@ -74,7 +72,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ======================= ЗАГОЛОВОК С ЛОГОТИПОМ ======================= -->
         <Border Grid.Row="0" Background="{StaticResource PrimaryColor1}">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -99,18 +96,15 @@
             </Grid>
         </Border>
 
-        <!-- ======================= ОСНОВНОЕ СОДЕРЖИМОЕ ======================= -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="380"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ======================= ПАНЕЛЬ ПАРАМЕТРОВ ======================= -->
             <Border Grid.Column="0" Background="{StaticResource AdditionalColor1}" Padding="20">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <!-- Параметры изделия -->
                         <TextBlock Text="Параметры изделия" Style="{StaticResource HeaderText}" 
                                    FontSize="16" Margin="0,0,0,15"/>
 
@@ -140,20 +134,17 @@
                                        Margin="8,0,0,0"/>
                         </Grid>
 
-                        <!-- Выбор ткани -->
                         <TextBlock Text="Ткань:" Style="{StaticResource HeaderText}"/>
                         <ComboBox x:Name="cbFabric" Width="320" 
                                   SelectionChanged="CbFabric_SelectionChanged"/>
                         <Button Content="+ Добавить свою ткань" Style="{StaticResource PrimaryButton}" 
                                 Width="320" Click="BtnAddCustomFabric_Click"/>
 
-                        <!-- Предпросмотр ткани -->
                         <Border Background="White" Height="80" Width="320" Margin="0,10,0,0" 
                                 BorderBrush="{StaticResource PrimaryColor1}" BorderThickness="1">
                             <Image x:Name="imgFabricPreview" Stretch="UniformToFill"/>
                         </Border>
 
-                        <!-- Выбор окантовки -->
                         <TextBlock Text="Окантовка:" Style="{StaticResource HeaderText}"/>
                         <ComboBox x:Name="cbBorder" Width="320" 
                                   SelectionChanged="CbBorder_SelectionChanged"/>
@@ -170,16 +161,12 @@
                         <Button Content="+ Добавить свою окантовку" Style="{StaticResource PrimaryButton}" 
                                 Width="320" Click="BtnAddCustomBorder_Click"/>
 
-                        <!-- Выбор фурнитуры -->
                         <TextBlock Text="Фурнитура:" Style="{StaticResource HeaderText}"/>
                         <ComboBox x:Name="cbAccessory" Width="320"/>
                         <Button Content="+ Добавить на изделие" Style="{StaticResource PrimaryButton}" 
                                 Width="320" Click="BtnAddAccessoryToDesign_Click"/>
                         <Button Content="+ Добавить свою фурнитуру" Style="{StaticResource PrimaryButton}" 
                                 Width="320" Click="BtnAddCustomAccessory_Click"/>
-
-                        <!-- Список добавленной фурнитуры -->
-                        <!-- Список добавленной фурнитуры -->
                         <TextBlock Text="Добавленная фурнитура:" Style="{StaticResource HeaderText}"/>
                         <ListBox x:Name="lbAccessories" Height="150" Width="320" 
          SelectionChanged="LbAccessories_SelectionChanged">
@@ -200,7 +187,6 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <!-- ВЫНЕСЕНО: Управление размером выбранной фурнитуры -->
                         <TextBlock Text="Управление размером:" Style="{StaticResource HeaderText}"/>
                         <Grid Margin="0,5,0,15">
                             <Grid.ColumnDefinitions>
@@ -225,8 +211,6 @@
                             <Button Content="Применить размер" Width="100" Height="25" Margin="5,0,0,0"
             Click="BtnApplySize_Click" Style="{StaticResource PrimaryButton}"/>
                         </StackPanel>
-
-                        <!-- Инструкции -->
                         <TextBlock Text="Инструкции:" Style="{StaticResource HeaderText}"/>
                         <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="DarkGray">
     • Выберите фурнитуру из списка<LineBreak/>
@@ -241,8 +225,6 @@
                     </StackPanel>
                 </ScrollViewer>
             </Border>
-
-            <!-- ======================= ОБЛАСТЬ ДИЗАЙНА ======================= -->
             <Border Grid.Column="1" Background="White" Margin="20" 
                     BorderBrush="{StaticResource PrimaryColor1}" BorderThickness="2">
                 <Grid>
@@ -251,7 +233,6 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Панель инструментов -->
                     <Border Grid.Row="0" Background="{StaticResource AdditionalColor2}" 
                             Padding="15,10" BorderBrush="{StaticResource PrimaryColor1}" 
                             BorderThickness="0,0,0,1">
@@ -268,8 +249,6 @@
                                     Click="BtnFitToSize_Click"/>
                         </StackPanel>
                     </Border>
-
-                    <!-- Canvas для дизайна -->
                     <ScrollViewer Grid.Row="1" x:Name="CanvasScrollViewer" 
                                   HorizontalScrollBarVisibility="Auto" 
                                   VerticalScrollBarVisibility="Auto">

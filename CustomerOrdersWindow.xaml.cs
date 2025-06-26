@@ -24,7 +24,6 @@ namespace UchPR
 
             LoadCustomerOrders();
         }
-
         private void dgOrders_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (dgOrders.SelectedItem is CustomerOrder selectedOrder)
@@ -34,8 +33,6 @@ namespace UchPR
                 detailsWindow.ShowDialog();
             }
         }
-
-
         private void LoadCustomerOrders()
         {
             try
@@ -65,7 +62,6 @@ namespace UchPR
                 MessageBox.Show($"Ошибка загрузки заказов: {ex.Message}");
             }
         }
-
         private void BtnPay_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.DataContext is CustomerOrder orderToPay)
@@ -77,7 +73,6 @@ namespace UchPR
                 {
                     try
                     {
-                        // Обновляем статус заказа на "Оплачен"
                         string updateQuery = @"UPDATE orders 
                                                SET execution_stage = 'Оплачен'::order_status 
                                                WHERE number = @number AND date = @date";
@@ -103,7 +98,6 @@ namespace UchPR
         }
     }
 
-    // Модель для отображения заказов клиента
     public class CustomerOrder
     {
         public int OrderNumber { get; set; }

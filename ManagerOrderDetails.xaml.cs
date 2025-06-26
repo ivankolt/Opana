@@ -35,13 +35,13 @@ namespace UchPR
 
             LoadOrderDetails();
             SetupManagerControls();
+            UpdateTotalCost();
         }
 
         private void LoadOrderDetails()
         {
             try
             {
-                // Загрузка основной информации о заказе (включая статус)
                 string headerQuery = "SELECT execution_stage FROM orders WHERE number = @number AND date = @date ORDER BY number ASC";
                 var headerParams = new[] {
     new NpgsqlParameter("@number", currentOrderNumber),
@@ -55,22 +55,22 @@ namespace UchPR
                 }
                 else
                 {
-                    currentStatus = "Новый"; // или выбросьте исключение, если это критично
+                    currentStatus = "Новый"; 
                 }
 
                 string itemsQuery = @"
             SELECT 
-    op.product_article, 
-    pn.name as product_name, 
-    op.quantity, 
-    COALESCE((SELECT AVG(pw.production_cost) FROM productwarehouse pw WHERE pw.product_article = op.product_article), 0) as unit_price,
-    p.width,
-    p.length,
-    p.unit_of_measurement_id
-FROM orderedproducts op
-JOIN product p ON op.product_article = p.article
-JOIN productname pn ON p.name_id = pn.id
-WHERE op.order_number = @number AND op.order_date = @date";
+                op.product_article, 
+                pn.name as product_name, 
+                op.quantity, 
+                COALESCE((SELECT AVG(pw.production_cost) FROM productwarehouse pw WHERE pw.product_article = op.product_article), 0) as unit_price,
+                p.width,
+                p.length,
+                p.unit_of_measurement_id
+            FROM orderedproducts op
+            JOIN product p ON op.product_article = p.article
+            JOIN productname pn ON p.name_id = pn.id
+            WHERE op.order_number = @number AND op.order_date = @date";
 
                 var itemsParams = new[] {
             new NpgsqlParameter("@number", currentOrderNumber),
@@ -86,7 +86,7 @@ WHERE op.order_number = @number AND op.order_date = @date";
                         ProductArticle = row["product_article"].ToString(),
                         ProductName = row["product_name"].ToString(),
                         Quantity = (int)row["quantity"],
-                        UnitPrice = SafeDataReader.GetSafeDecimal(row, "unit_price"),
+                        UnitPrice = row["unit_price"] != DBNull.Value ? Convert.ToDecimal(row["unit_price"]) : 0,
                         Width = SafeDataReader.GetSafeDecimal(row, "width"),
                         Length = SafeDataReader.GetSafeDecimal(row, "length"),
                         UnitId = Convert.ToInt32(row["unit_of_measurement_id"])

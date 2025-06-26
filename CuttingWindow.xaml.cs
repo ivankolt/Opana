@@ -46,11 +46,6 @@ namespace UchPR
             }
 
         }
-
-
-
-
-
         private void SaveCutsToDb()
         {
             if (lbProducts.SelectedItem is OrderItem item)
@@ -147,12 +142,9 @@ namespace UchPR
                 double prodWid = (double)item.Width;
                 int count = item.Quantity;
 
-                // Для каждого экземпляра изделия храним размещённые отрезки
                 var placedCuts = new List<List<(double x, double y, double w, double h, CutPiece cut, bool rotated)>>();
                 for (int i = 0; i < count; i++)
                     placedCuts.Add(new List<(double, double, double, double, CutPiece, bool)>());
-
-                // Координаты и состояния для каждого изделия
                 double[] shelfX = new double[count];
                 double[] shelfY = new double[count];
                 double[] shelfHeight = new double[count];
@@ -168,7 +160,7 @@ namespace UchPR
                 foreach (var cut in currentCuts)
                 {
                     bool placed = false;
-                    // Пытаемся разместить на текущем изделии, если не помещается — переходим к следующему
+                  
                     for (int n = currItem; n < count; n++)
                     {
                         // 1. Попробуем без поворота
@@ -183,7 +175,7 @@ namespace UchPR
                         }
                         if (shelfY[n] + cutH <= prodWid * scale)
                         {
-                            // Помещается без поворота
+                          
                             placedCuts[n].Add((shelfX[n], shelfY[n], cutW, cutH, cut, false));
                             shelfX[n] += cutW;
                             shelfHeight[n] = Math.Max(shelfHeight[n], cutH);
@@ -192,7 +184,7 @@ namespace UchPR
                             break;
                         }
 
-                        // 2. Попробуем с поворотом (меняем местами длину и ширину)
+                
                         cutW = cut.Width * scale;
                         cutH = cut.Length * scale;
 
@@ -204,7 +196,7 @@ namespace UchPR
                         }
                         if (shelfY[n] + cutH <= prodWid * scale)
                         {
-                            // Помещается с поворотом
+                       
                             placedCuts[n].Add((shelfX[n], shelfY[n], cutW, cutH, cut, true));
                             shelfX[n] += cutW;
                             shelfHeight[n] = Math.Max(shelfHeight[n], cutH);
@@ -212,7 +204,7 @@ namespace UchPR
                             placed = true;
                             break;
                         }
-                        // Если не помещается ни так, ни так — переходим к следующему изделию
+                       
                     }
                     if (!placed)
                     {
@@ -229,7 +221,6 @@ namespace UchPR
                     }
                 }
 
-                // Теперь рисуем все изделия и их размещённые отрезки
                 double offsetY = 30;
                 for (int n = 0; n < count; n++)
                 {
@@ -256,7 +247,6 @@ namespace UchPR
                     Canvas.SetTop(label, offsetY - 25);
                     canvasVisual.Children.Add(label);
 
-                    // Рисуем размещённые на этом изделии отрезки
                     foreach (var (x, y, w, h, cut, rotated) in placedCuts[n])
                     {
                         var cutRect = new Rectangle
@@ -284,7 +274,7 @@ namespace UchPR
                         canvasVisual.Children.Add(cutLabel);
                     }
 
-                    offsetY += prodWid * scale + 40; // сместить вниз для следующего изделия
+                    offsetY += prodWid * scale + 40; 
                 }
             }
         }

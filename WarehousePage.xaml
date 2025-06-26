@@ -19,8 +19,6 @@
             <RowDefinition Height="60"/>
         </Grid.RowDefinitions>
 
-        
-        <!-- ======================= ПАНЕЛЬ ФИЛЬТРОВ ======================= -->
         <Border Grid.Row="1" Background="{StaticResource AdditionalColor1}" Padding="20,10">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Тип материалов:" VerticalAlignment="Center" 
@@ -31,8 +29,6 @@
           SelectionChanged="cmbMaterialType_SelectionChanged"/>
             </StackPanel>
         </Border>
-
-        <!-- ======================= ТАБЛИЦА ТКАНЕЙ ======================= -->
         <DataGrid x:Name="dgFabrics" Grid.Row="2" Margin="20"
                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                   AlternatingRowBackground="{StaticResource AdditionalColor1}"
@@ -53,7 +49,6 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- ======================= ТАБЛИЦА ФУРНИТУРЫ ======================= -->
         <DataGrid x:Name="dgAccessories" Grid.Row="2" Margin="20"
                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                   AlternatingRowBackground="{StaticResource AdditionalColor1}"
@@ -87,9 +82,6 @@
                 <DataGridTextColumn Header="Дата производства" Binding="{Binding ProductionDate, StringFormat=dd.MM.yyyy}" Width="120"/>
             </DataGrid.Columns>
         </DataGrid>
-
-
-        <!-- ======================= КНОПКИ УПРАВЛЕНИЯ ======================= -->
         <Border Grid.Row="3" Background="{StaticResource PrimaryColor2}" Padding="20,10">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button x:Name="btnSetThreshold" Content="Настроить списание" 

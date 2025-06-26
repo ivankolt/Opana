@@ -269,12 +269,19 @@ ORDER BY t.type, t.name;
 
             foreach (DataRow row in dt.Rows)
             {
+                string type = row["type"].ToString();
+                string unit = row["unit"].ToString();
+
+                // Если это аксессуар, всегда "шт."
+                if (type == "accessory")
+                    unit = "шт.";
+
                 movementItems.Add(new StockMovementItem
                 {
-                    Type = row["type"].ToString(),
+                    Type = type,
                     Article = row["article"].ToString(),
                     Name = row["name"].ToString(),
-                    Unit = row["unit"].ToString(),
+                    Unit = unit,
                     StartQty = Convert.ToDecimal(row["start_qty"]),
                     Incoming = Convert.ToDecimal(row["incoming"]),
                     Outgoing = Convert.ToDecimal(row["outgoing"]),

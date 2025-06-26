@@ -5,7 +5,6 @@
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
-        <!-- Цвета согласно StyleGuide -->
         <SolidColorBrush x:Key="PrimaryColor1" Color="#B5D5CA"/>
         <SolidColorBrush x:Key="PrimaryColor2" Color="#E0A9AF"/>
         <SolidColorBrush x:Key="AdditionalColor1" Color="#D1EEFC"/>
@@ -13,7 +12,6 @@
         <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="TextBlack" Color="#000000"/>
 
-        <!-- Стиль карточки фурнитуры -->
         <DataTemplate x:Key="AccessoryCardTemplate">
             <Border Background="{StaticResource TextWhite}" 
                     BorderBrush="{StaticResource PrimaryColor2}" 
@@ -33,8 +31,6 @@
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-
-                    <!-- Изображение фурнитуры -->
                     <Border Grid.Row="0" Background="{StaticResource AdditionalColor1}" 
                             CornerRadius="8" Margin="0,0,0,10">
                         <Image Source="{Binding ImagePath}" 
@@ -43,7 +39,6 @@
                        VerticalAlignment="Center"/>
                     </Border>
 
-                    <!-- Артикул -->
                     <TextBlock Grid.Row="1" 
                                Text="{Binding article, StringFormat='Арт. {0}'}"
                                FontSize="12" 
@@ -51,8 +46,6 @@
                                Foreground="{StaticResource TextBlack}"
                                HorizontalAlignment="Right"
                                Margin="0,0,0,5"/>
-
-                    <!-- Название фурнитуры -->
                     <TextBlock Grid.Row="2" 
                                Text="{Binding accessory_name}"
                                FontSize="16" 
@@ -61,8 +54,6 @@
                                TextWrapping="Wrap"
                                MaxHeight="40"
                                Margin="0,0,0,8"/>
-
-                    <!-- Характеристики -->
                     <StackPanel Grid.Row="3" Margin="0,0,0,10">
                         <TextBlock Text="{Binding accessory_type, StringFormat='Тип: {0}'}"
                                    FontSize="11" 
@@ -84,7 +75,6 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- Цена и единица измерения -->
                     <Grid Grid.Row="5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -108,7 +98,6 @@
             </Border>
         </DataTemplate>
 
-        <!-- Эффект тени -->
         <DropShadowEffect x:Key="DropShadowEffect" 
                           Color="Gray" 
                           BlurRadius="8" 
@@ -124,7 +113,6 @@
             <RowDefinition Height="80"/>
         </Grid.RowDefinitions>
 
-        <!-- ======================= ЗАГОЛОВОК С ЛОГОТИПОМ ======================= -->
         <Border Grid.Row="0" Background="{StaticResource PrimaryColor2}">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -141,7 +129,6 @@
             </Grid>
         </Border>
 
-        <!-- ======================= ПАНЕЛЬ ФИЛЬТРОВ ======================= -->
         <Border Grid.Row="1" Background="{StaticResource TextWhite}" Padding="20,15">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -188,7 +175,6 @@
             </Grid>
         </Border>
 
-        <!-- ======================= КАРТОЧКИ ФУРНИТУРЫ ======================= -->
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" 
               HorizontalScrollBarVisibility="Disabled" Margin="10">
             <ListBox x:Name="lbAccessories" 
@@ -213,7 +199,6 @@
             </ListBox>
         </ScrollViewer>
 
-        <!-- ======================= ПАНЕЛЬ УПРАВЛЕНИЯ ======================= -->
         <Border Grid.Row="3" Background="{StaticResource PrimaryColor2}" Padding="20,15">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button x:Name="btnAdd" Content="Добавить" 
