@@ -134,7 +134,7 @@ Visual Studio 2017+
 
 SQL Server Management Studio (опционально)
 
-Сборка проекта
+### Сборка проекта
 bash
 git clone https://github.com/ivankolt/Opana.git
 cd Opana
